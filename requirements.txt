@@ -1,0 +1,27 @@
+# DL
+torch
+torchvision
+torchaudio
+
+# face tracking computer vision
+opencv-python
+mediapipe
+
+# audio process and capture
+librosa
+sounddevice
+scipy
+
+# NLP & speech to txt
+faster-whisper
+transformers
+
+# math and data
+numpy
+pandas
+scikit-learn
+matplotlib
+
+# utilities
+tqdm
+kagglehub
