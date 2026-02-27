@@ -1,0 +1,17 @@
+*.venv
+*.jpg
+*.zip
+data/raw/
+
+# Windows junk
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+
+#vscode
+.vscode/
