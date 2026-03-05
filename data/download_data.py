@@ -11,7 +11,8 @@ DATASETS = {
     "raf-db": "shuvoalok/raf-db-dataset",
     "fer2013": "msambare/fer2013",
     "ravdess": "orvile/ravdess-dataset",
-    "cremad": "ejlok1/cremad"
+    "cremad": "ejlok1/cremad",
+    "ck": "davilsena/ckdataset"
 }
 
 def download_and_move():

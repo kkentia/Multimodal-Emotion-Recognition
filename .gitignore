@@ -1,4 +1,5 @@
 *.venv
+*.venv2
 *.jpg
 *.zip
 
@@ -19,6 +20,9 @@ __pycache__/
 #datasets
 data/raw/
 data/processed/
+
+#weights
+models/saved_weights
 
 #Mac
 # macOS specific
