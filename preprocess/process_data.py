@@ -13,6 +13,7 @@ PATH_FER2013 = os.path.join(RAW_DIR, "fer2013")
 PATH_RAFDB   = os.path.join(RAW_DIR, "raf-db")
 PATH_RAVDESS = os.path.join(RAW_DIR, "ravdess")
 PATH_CREMAD  = os.path.join(RAW_DIR, "cremad")
+PATH_CK= os.path.join(RAW_DIR, "ck")
 
 DEST_FACES = os.path.join(DEST_DIR, "faces")
 DEST_AUDIO = os.path.join(DEST_DIR, "audio")
