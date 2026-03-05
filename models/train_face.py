@@ -17,9 +17,14 @@ EPOCHS = 10
 LEARNING_RATE = 0.001
 NUM_CLASSES = 6 # Angry, Disgust, Fear, Happy, Neutral, Sad
 
-
-#device = torch.device("cuda" if torch.cuda.is_available() else "cpu") #change to mps for mac
-device = torch_directml.device()
+#select available device
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    try:
+        device = torch_directml.device()
+    except ImportError:
+        device = torch.device("cpu")
 
 print(f"using: {device}")
 
