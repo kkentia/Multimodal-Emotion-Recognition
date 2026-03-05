@@ -5,3 +5,4 @@ Combine FER (Facial Emotion Recognition), SER (Speech Emotion Recognition) and N
  2. cd into it, and inside a new virtual env (important!) , do: 'pip install -r requirements.txt' to install dependencies.
  3. launch the download_data.py script from inside /data to install the datasets locally. They will appear in the /data/raw folder.
  4. launch the process_data.py script from inside /preprocess. Processed data for 6 emotions (audio and faces) will appear in the /data/processed folder.
+ 5. launch the train_face.py to fine-tune a ResNet model on emotion recognition. This will take some time.
