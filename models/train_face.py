@@ -19,6 +19,8 @@ NUM_CLASSES = 6 # Angry, Disgust, Fear, Happy, Neutral, Sad
 #select available device
 if torch.cuda.is_available():
     device = torch.device("cuda")
+elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+    device = torch.device("mps")
 else:
     try:
         import torch_directml
