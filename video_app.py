@@ -56,7 +56,7 @@ def late_fusion(fer, ser):
 
 def main():
     print("[INFO] Starting...")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     print("[INFO] cap.isOpened() =", cap.isOpened())
 
     if not cap.isOpened():
