@@ -7,28 +7,69 @@ import platform
 
 #mode for the prediction
 class Mode(Enum):
-    FER_ONLY = 1 #only FER used for the prediction 
-    SER_ONLY = 2 #only SER used for the prediction 
-    FUSED = 3 #FER and SER used for the prediction
+    FER_ONLY = 1 #only facial emotion recognition
+    SER_ONLY = 2 #only speech emotion recognition
+    FUSED = 3 #fusion of facial emotion and speech emotion recognition
 
-def draw_panel(img, x1, y1, x2, y2, title, lines): #draws UI panel
-    cv2.rectangle(img, (x1, y1), (x2, y2), (255, 255, 255), 2)
-    cv2.putText(img, title, (x1 + 10, y1 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
-    y = y1 + 65
-    for line in lines:
-        cv2.putText(img, line, (x1 + 10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-        y += 28
+#color palette
+THEME = {"bg": (18, 18, 24), 
+    "panel": (35, 36, 48),
+    "panel2": (45, 48, 66),
+    "text": (240, 240, 245),
+    "muted": (180, 185, 195),
+    "accent": (255, 170, 60),
+    "cyan": (80, 220, 255),
+    "green": (80, 220, 120),
+    "red": (90, 90, 255),
+    "yellow": (80, 220, 255),}
 
 def emotion_color(emotion):
-    colors = {
-        "happy": (0,255,0),
-        "sad": (255,0,0),
-        "angry": (0,0,255),
-        "surprise": (0,255,255),
-        "fear": (255,255,0),
-        "neutral": (200,200,200)}
+    colors = {"happy": (80, 220, 120),
+        "sad": (255, 140, 90),
+        "angry": (80, 80, 255),
+        "surprise": (80, 220, 255),
+        "fear": (180, 120, 255),
+        "neutral": (200, 200, 210),}
+    return colors.get(emotion.lower(), (255, 255, 255))
 
-    return colors.get(emotion.lower(), (255,255,255))
+def draw_conf_bar(img, x, y, w, h, value, color):
+    cv2.rectangle(img, (x, y), (x + w, y + h), (60, 62, 75), -1)
+    fill_w = int(w * max(0, min(1, value)))
+    cv2.rectangle(img, (x, y), (x + fill_w, y + h), color, -1)
+    cv2.rectangle(img, (x, y), (x + w, y + h), (95, 98, 120), 1)
+
+
+def draw_card(img, x1, y1, x2, y2, title, label, conf, accent):
+    
+    cv2.rectangle(img, (x1, y1), (x2, y2), (35, 36, 48), -1)
+    cv2.rectangle(img, (x1, y1), (x2, y2), (70, 72, 90), 1)
+    cv2.rectangle(img, (x1, y1), (x1 + 8, y2), accent, -1)
+    cv2.putText(img, title, (x1 + 18, y1 + 30),
+                cv2.FONT_HERSHEY_DUPLEX, 0.8, (245, 245, 250), 1, cv2.LINE_AA)
+    cv2.line(img, (x1 + 16, y1 + 42), (x2 - 16, y1 + 42), (70, 72, 90), 1)
+    cv2.putText(img, f"Label: {label.title()}", (x1 + 18, y1 + 72),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.65, (210, 212, 220), 1, cv2.LINE_AA)
+    cv2.putText(img, f"Confidence: {conf:.2f}", (x1 + 18, y1 + 100),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.60, (210, 212, 220), 1, cv2.LINE_AA)
+    draw_conf_bar(img, x1 + 18, y1 + 115, (x2 - x1) - 36, 14, conf, accent)
+
+
+def draw_history(img, x, y, history):
+    cv2.putText(img, "Recent History", (x, y),
+                cv2.FONT_HERSHEY_DUPLEX, 0.72, (245,245,250), 1, cv2.LINE_AA)
+    y += 20
+    for i, item in enumerate(list(history)[:8]):
+        yy = y + i * 34
+        c = emotion_color(item)
+
+        cv2.rectangle(img, (x, yy), (x + 210, yy + 24), (45,48,66), -1)
+        cv2.rectangle(img, (x, yy), (x + 210, yy + 24), (80,84,104), 1)
+
+        cv2.circle(img, (x + 14, yy + 12), 7, c, -1)
+
+        cv2.putText(img, item.title(), (x + 30, yy + 17),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.56, (220,220,228), 1, cv2.LINE_AA)
+
 
 def put_hud(img, text, label, subtext=""):
     h, w = img.shape[:2]
@@ -55,16 +96,40 @@ def late_fusion(fer, ser):
     return fer if fer[1] >= ser[1] else ser
 
 
+def open_camera():
+    for idx in [0, 1, 2, 3]:
+        print(f"[INFO] Trying camera index {idx}...")
+        cap = cv2.VideoCapture(idx)
+
+        if not cap.isOpened():
+            cap.release()
+            continue
+
+        ret, frame = cap.read()
+        if ret and frame is not None:
+            print(f"[INFO] Using camera index {idx}")
+            return cap
+
+        cap.release()
+
+    return None
+
 def main():
     print("[INFO] Starting...")
 
-    # use the exact camera call that worked in your simple test
-    cap = cv2.VideoCapture(1)
+    cap = open_camera()
+
+    if cap is None:
+        print("[ERROR] Could not open a working webcam.")
+        return
+
     print("[INFO] cap.isOpened() =", cap.isOpened())
 
-    if not cap.isOpened():
-        print("[ERROR] Could not open webcam.")
-        return
+    mode = Mode.FER_ONLY
+    show_history = True
+    history = deque(maxlen=10)
+
+    last_print = time.time()
 
     mode = Mode.FER_ONLY
     show_history = True
@@ -107,19 +172,12 @@ def main():
         put_hud(left_view, f"Prediction: {label.upper()} ({conf:.2f})", label, mode_name)
 
         px1, px2 = w + 20, w + panel_w - 20
-        draw_panel(canvas, px1, 20,  px2, 130, "FER",   [f"label: {fer[0]}",   f"conf: {fer[1]:.2f}"])
-        draw_panel(canvas, px1, 160, px2, 270, "SER",   [f"label: {ser[0]}",   f"conf: {ser[1]:.2f}"])
-        draw_panel(canvas, px1, 300, px2, 410, "FUSED", [f"label: {fused[0]}", f"conf: {fused[1]:.2f}"])
+        draw_card(canvas, px1, 20,  px2, 150, "FER", fer[0], fer[1], (80,220,255))
+        draw_card(canvas, px1, 170, px2, 300, "SER", ser[0], ser[1], (80,220,120))
+        draw_card(canvas, px1, 320, px2, 450, "FUSED", fused[0], fused[1], (255,170,60))
 
         if show_history:
-            y0 = 450
-            cv2.putText(canvas, "History (latest first):", (px1, y0),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-            y = y0 + 30
-            for i, item in enumerate(list(history)[:10]):
-                cv2.putText(canvas, f"{i+1}. {item}", (px1, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.65, (220, 220, 220), 2)
-                y += 26
+            draw_history(canvas, px1, 470, history)
 
         put_footer(left_view, "Keys: 1=FER  2=SER  3=FUSED  H=history  Q/Esc=quit")
         cv2.imshow("Emotion Interface", canvas)
