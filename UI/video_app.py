@@ -3,6 +3,7 @@ import numpy as np
 from collections import deque
 from enum import Enum
 import time
+import platform
 
 #mode for the prediction
 class Mode(Enum):
@@ -29,15 +30,14 @@ def emotion_color(emotion):
 
     return colors.get(emotion.lower(), (255,255,255))
 
-def put_hud(img, text, subtext=""): #img -> the image, text -> prediction, subtext -> extra info (e.g Mode)
-    h, w = img.shape[:2] #image dimension 
+def put_hud(img, text, label, subtext=""):
+    h, w = img.shape[:2]
     bar_h = 90
     overlay = img.copy()
     cv2.rectangle(overlay, (0, 0), (w, bar_h), (0, 0, 0), -1)
     img[:] = cv2.addWeighted(overlay, 0.55, img, 0.45, 0)
-    label="happy"
-    color=emotion_color(label)
-    cv2.putText(img, text, (20, 45), cv2.FONT_HERSHEY_SIMPLEX, 1.1,color, 2) #text for prediction of the emotion on top of the webcam 
+    color = emotion_color(label)
+    cv2.putText(img, text, (20, 45), cv2.FONT_HERSHEY_SIMPLEX, 1.1, color, 2)
     if subtext:
         cv2.putText(img, subtext, (20, 78), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (220, 220, 220), 2)
 
@@ -54,34 +54,28 @@ def fake_ser():
 def late_fusion(fer, ser):
     return fer if fer[1] >= ser[1] else ser
 
+
 def main():
     print("[INFO] Starting...")
+
+    # use the exact camera call that worked in your simple test
     cap = cv2.VideoCapture(1)
     print("[INFO] cap.isOpened() =", cap.isOpened())
 
     if not cap.isOpened():
-        print("[ERROR] Could not open webcam. Try 1 or 2 for camera index.")
+        print("[ERROR] Could not open webcam.")
         return
-
-    cv2.namedWindow("Emotion Interface", cv2.WINDOW_NORMAL)
-    print("[INFO] Window created. Entering loop...")
 
     mode = Mode.FER_ONLY
     show_history = True
     history = deque(maxlen=10)
 
-    last_print = time.time()
-
     while True:
         ret, frame = cap.read()
-
-        # print occasionally so you know the loop is alive
-        if time.time() - last_print > 2:
-            print("[INFO] Loop alive. ret =", ret, " frame shape =" , None if frame is None else frame.shape)
-            last_print = time.time()
+        print("[DEBUG] ret =", ret, "shape =", None if frame is None else frame.shape)
 
         if not ret or frame is None:
-            print("[ERROR] Failed to grab frame (ret was False).")
+            print("[ERROR] Failed to grab frame.")
             break
 
         frame = cv2.flip(frame, 1)
@@ -110,7 +104,7 @@ def main():
 
         left_view = canvas[:, :w]
         label, conf = main_pred
-        put_hud(left_view, f"Prediction: {label.upper()}  ({conf:.2f})", mode_name)
+        put_hud(left_view, f"Prediction: {label.upper()} ({conf:.2f})", label, mode_name)
 
         px1, px2 = w + 20, w + panel_w - 20
         draw_panel(canvas, px1, 20,  px2, 130, "FER",   [f"label: {fer[0]}",   f"conf: {fer[1]:.2f}"])
@@ -119,27 +113,28 @@ def main():
 
         if show_history:
             y0 = 450
-            cv2.putText(canvas, "History (latest first):", (px1, y0), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
+            cv2.putText(canvas, "History (latest first):", (px1, y0),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
             y = y0 + 30
             for i, item in enumerate(list(history)[:10]):
-                cv2.putText(canvas, f"{i+1}. {item}", (px1, y), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (220,220,220), 2)
+                cv2.putText(canvas, f"{i+1}. {item}", (px1, y),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.65, (220, 220, 220), 2)
                 y += 26
 
         put_footer(left_view, "Keys: 1=FER  2=SER  3=FUSED  H=history  Q/Esc=quit")
-
         cv2.imshow("Emotion Interface", canvas)
 
         key = cv2.waitKey(1) & 0xFF
-        if key in (ord('q'), 27):
+        if key in (ord("q"), 27):
             print("[INFO] Quit key pressed.")
             break
-        elif key == ord('1'):
+        elif key == ord("1"):
             mode = Mode.FER_ONLY
-        elif key == ord('2'):
+        elif key == ord("2"):
             mode = Mode.SER_ONLY
-        elif key == ord('3'):
+        elif key == ord("3"):
             mode = Mode.FUSED
-        elif key in (ord('h'), ord('H')):
+        elif key in (ord("h"), ord("H")):
             show_history = not show_history
 
     cap.release()
