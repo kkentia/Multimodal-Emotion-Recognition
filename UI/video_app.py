@@ -5,6 +5,9 @@ from enum import Enum
 import time
 import platform
 
+os = platform.system()
+print(os)
+
 #mode for the prediction
 class Mode(Enum):
     FER_ONLY = 1 #only facial emotion recognition
