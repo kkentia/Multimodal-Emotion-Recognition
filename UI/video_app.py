@@ -3,6 +3,9 @@ import numpy as np
 from collections import deque
 from enum import Enum
 import time
+import platform
+
+os = platform.system()
 
 #mode for the prediction
 class Mode(Enum):
@@ -55,9 +58,12 @@ def late_fusion(fer, ser):
     return fer if fer[1] >= ser[1] else ser
 
 def main():
-    print("[INFO] Starting...")
-    cap = cv2.VideoCapture(1)
-    print("[INFO] cap.isOpened() =", cap.isOpened())
+    if os == "Darwin":  # macOS
+        cam_index = 1
+    else:  # Windows or Linux
+        cam_index = 0
+
+    cap = cv2.VideoCapture(cam_index)
 
     if not cap.isOpened():
         print("[ERROR] Could not open webcam. Try 1 or 2 for camera index.")
