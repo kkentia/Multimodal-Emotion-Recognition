@@ -27,12 +27,17 @@ THEME = {"bg": (18, 18, 24),
     "yellow": (80, 220, 255),}
 
 def emotion_color(emotion):
-    colors = {"happy": (80, 220, 120),
+    colors = {
+        "happy": (80, 220, 120),
         "sad": (255, 140, 90),
         "angry": (80, 80, 255),
         "surprise": (80, 220, 255),
         "fear": (180, 120, 255),
-        "neutral": (200, 200, 210),}
+        "neutral": (200, 200, 210),
+        "positive": (80, 220, 120),
+        "negative": (80, 80, 255),
+        "mixed": (180, 120, 255),
+    }
     return colors.get(emotion.lower(), (255, 255, 255))
 
 def draw_conf_bar(img, x, y, w, h, value, color):
@@ -117,6 +122,71 @@ def open_camera():
 
     return None
 
+#for the NLP -> for now adding some comments as a placeholder
+def simple_text_emotion(text):
+    text_l=text.lower().strip()
+    if not text_l: 
+        return("neutral",0.5)
+    positive_words = {
+        "great", "awesome", "love", "happy", "excited", "good", "amazing",
+        "wonderful", "nice", "fantastic", "cool", "glad"
+    }
+    negative_words = {
+        "sad", "angry", "hate", "upset", "bad", "terrible", "awful",
+        "worried", "fear", "scared", "annoyed", "frustrated"
+    }
+    pos_hits = sum(word in text_l for word in positive_words)
+    neg_hits = sum(word in text_l for word in negative_words)
+
+    if pos_hits > neg_hits and pos_hits > 0:
+        conf = min(0.55 + 0.10 * pos_hits, 0.95)
+        return ("positive", conf)
+
+    if neg_hits > pos_hits and neg_hits > 0:
+        conf = min(0.55 + 0.10 * neg_hits, 0.95)
+        return ("negative", conf)
+
+    if pos_hits == neg_hits and pos_hits > 0:
+        return ("mixed", 0.65)
+
+    return ("neutral", 0.55)
+
+def wrap_text(text, max_chars=38):
+    words = text.split()
+    lines = []
+    current = ""
+
+    for word in words:
+        trial = word if not current else current + " " + word
+        if len(trial) <= max_chars:
+            current = trial
+        else:
+            if current:
+                lines.append(current)
+            current = word
+
+    if current:
+        lines.append(current)
+
+    return lines
+
+
+def draw_transcript_panel(img, x1, y1, x2, y2, text):
+    cv2.rectangle(img, (x1, y1), (x2, y2), (35, 36, 48), -1)
+    cv2.rectangle(img, (x1, y1), (x2, y2), (70, 72, 90), 1)
+    cv2.rectangle(img, (x1, y1), (x1 + 8, y2), (180, 180, 255), -1)
+
+    cv2.putText(img, "Live Transcript", (x1 + 18, y1 + 30),
+                cv2.FONT_HERSHEY_DUPLEX, 0.8, (245, 245, 250), 1, cv2.LINE_AA)
+    cv2.line(img, (x1 + 16, y1 + 42), (x2 - 16, y1 + 42), (70, 72, 90), 1)
+
+    lines = wrap_text(text if text else "Waiting for transcript...", max_chars=38)
+
+    yy = y1 + 70
+    for line in lines[:6]:
+        cv2.putText(img, line, (x1 + 18, yy),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.58, (220, 220, 228), 1, cv2.LINE_AA)
+        yy += 28
 def main():
     print("[INFO] Starting...")
 
@@ -134,6 +204,8 @@ def main():
 
     last_print = time.time()
 
+    latest_transcript = "I feel really happy today" #later replace this with the text from whisper
+
     mode = Mode.FER_ONLY
     show_history = True
     history = deque(maxlen=10)
@@ -141,6 +213,9 @@ def main():
     while True:
         ret, frame = cap.read()
         print("[DEBUG] ret =", ret, "shape =", None if frame is None else frame.shape)
+
+        nlp = simple_text_emotion(latest_transcript)
+        print("NLP =", nlp)
 
         if not ret or frame is None:
             print("[ERROR] Failed to grab frame.")
@@ -162,12 +237,14 @@ def main():
             main_pred = fused
             mode_name = "MODE: FUSED (press 1 for FER, 2 for SER)"
 
+
         history.appendleft(main_pred[0])
 
         h, w = frame.shape[:2]
         panel_w = 420
-        canvas = np.zeros((h, w + panel_w, 3), dtype=np.uint8)
-        canvas[:, :w] = frame
+        canvas_h = max(h, 760)
+        canvas = np.zeros((canvas_h, w + panel_w, 3), dtype=np.uint8)
+        canvas[:h, :w] = frame
         canvas[:, w:] = (30, 30, 30)
 
         left_view = canvas[:, :w]
@@ -175,12 +252,17 @@ def main():
         put_hud(left_view, f"Prediction: {label.upper()} ({conf:.2f})", label, mode_name)
 
         px1, px2 = w + 20, w + panel_w - 20
-        draw_card(canvas, px1, 20,  px2, 150, "FER", fer[0], fer[1], (80,220,255))
-        draw_card(canvas, px1, 170, px2, 300, "SER", ser[0], ser[1], (80,220,120))
-        draw_card(canvas, px1, 320, px2, 450, "FUSED", fused[0], fused[1], (255,170,60))
 
-        if show_history:
-            draw_history(canvas, px1, 470, history)
+        draw_card(canvas, px1, 20,  px2, 140, "FER", fer[0], fer[1], (80,220,255))
+        draw_card(canvas, px1, 155, px2, 275, "SER", ser[0], ser[1], (80,220,120))
+        draw_card(canvas, px1, 290, px2, 410, "FUSED", fused[0], fused[1], (255,170,60))
+        draw_card(canvas, px1, 425, px2, 545, "NLP", nlp[0], nlp[1], emotion_color(nlp[0]))
+
+        draw_transcript_panel(canvas, px1, 560, px2, canvas_h - 20, latest_transcript)
+
+        if show_history and canvas_h > 760:
+            draw_history(canvas, px1, 720, history)
+
 
         put_footer(left_view, "Keys: 1=FER  2=SER  3=FUSED  H=history  Q/Esc=quit")
         cv2.imshow("Emotion Interface", canvas)
