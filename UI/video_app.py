@@ -27,17 +27,25 @@ THEME = {"bg": (18, 18, 24),
     "yellow": (80, 220, 255),}
 
 def emotion_color(emotion):
+<<<<<<< HEAD
     colors = {
         "happy": (80, 220, 120),
+=======
+    colors = {"happy": (80, 220, 120),
+>>>>>>> antonia
         "sad": (255, 140, 90),
         "angry": (80, 80, 255),
         "surprise": (80, 220, 255),
         "fear": (180, 120, 255),
+<<<<<<< HEAD
         "neutral": (200, 200, 210),
         "positive": (80, 220, 120),
         "negative": (80, 80, 255),
         "mixed": (180, 120, 255),
     }
+=======
+        "neutral": (200, 200, 210),}
+>>>>>>> antonia
     return colors.get(emotion.lower(), (255, 255, 255))
 
 def draw_conf_bar(img, x, y, w, h, value, color):
@@ -122,6 +130,7 @@ def open_camera():
 
     return None
 
+<<<<<<< HEAD
 #for the NLP -> for now adding some comments as a placeholder
 def simple_text_emotion(text):
     text_l=text.lower().strip()
@@ -187,6 +196,8 @@ def draw_transcript_panel(img, x1, y1, x2, y2, text):
         cv2.putText(img, line, (x1 + 18, yy),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.58, (220, 220, 228), 1, cv2.LINE_AA)
         yy += 28
+=======
+>>>>>>> antonia
 def main():
     print("[INFO] Starting...")
 
@@ -204,8 +215,11 @@ def main():
 
     last_print = time.time()
 
+<<<<<<< HEAD
     latest_transcript = "I feel really happy today" #later replace this with the text from whisper
 
+=======
+>>>>>>> antonia
     mode = Mode.FER_ONLY
     show_history = True
     history = deque(maxlen=10)
@@ -213,9 +227,12 @@ def main():
     while True:
         ret, frame = cap.read()
         print("[DEBUG] ret =", ret, "shape =", None if frame is None else frame.shape)
+<<<<<<< HEAD
 
         nlp = simple_text_emotion(latest_transcript)
         print("NLP =", nlp)
+=======
+>>>>>>> antonia
 
         if not ret or frame is None:
             print("[ERROR] Failed to grab frame.")
@@ -252,6 +269,7 @@ def main():
         put_hud(left_view, f"Prediction: {label.upper()} ({conf:.2f})", label, mode_name)
 
         px1, px2 = w + 20, w + panel_w - 20
+<<<<<<< HEAD
 
         draw_card(canvas, px1, 20,  px2, 140, "FER", fer[0], fer[1], (80,220,255))
         draw_card(canvas, px1, 155, px2, 275, "SER", ser[0], ser[1], (80,220,120))
@@ -263,6 +281,14 @@ def main():
         if show_history and canvas_h > 760:
             draw_history(canvas, px1, 720, history)
 
+=======
+        draw_card(canvas, px1, 20,  px2, 150, "FER", fer[0], fer[1], (80,220,255))
+        draw_card(canvas, px1, 170, px2, 300, "SER", ser[0], ser[1], (80,220,120))
+        draw_card(canvas, px1, 320, px2, 450, "FUSED", fused[0], fused[1], (255,170,60))
+
+        if show_history:
+            draw_history(canvas, px1, 470, history)
+>>>>>>> antonia
 
         put_footer(left_view, "Keys: 1=FER  2=SER  3=FUSED  H=history  Q/Esc=quit")
         cv2.imshow("Emotion Interface", canvas)
