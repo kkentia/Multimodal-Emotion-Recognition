@@ -6,17 +6,31 @@ import time
 from collections import deque
 from enum import Enum
 
+import torch
+import torch.nn as nn
+from torchvision import models, transforms
+from PIL import Image
+
 #configure for godot
 GODOT_HOST = "127.0.0.1"
 GODOT_PORT = 4242
 
-SEND_INTERVAL = 1.0          # minimum seconds between sends
-STABLE_REQUIRED_FRAMES = 15  # how long combo must stay the same before sending
-CONF_THRESHOLD = 0.60
+SEND_INTERVAL = 1.0          # minimum sec between sends
+STABLE_REQUIRED_FRAMES = 15  # how long it must stay the same before sending frames
+CONF_THRESHOLD = 0.60 
 
 WINDOW_NAME = "Emotion Spell Interface"
 
-#modes for prediction
+# Path to the Resnet18 model
+MODEL_PATH = "resnet18_emotion.pth"
+
+#we need to check if these match with the emotions from the model 
+CLASS_NAMES = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
+
+#was model trained with greyscale input? 
+USE_GRAYSCALE_MODEL = False
+
+#three modes for the prediction
 class Mode(Enum):
     FER_ONLY = 1
     SER_ONLY = 2
@@ -34,6 +48,103 @@ SPELLS = {
     ("neutral", "neutral"): "idle_aura",
 }
 
+#resnet model
+class ResNetFER:
+    def __init__(self, model_path, class_names, use_grayscale=False, device=None):
+        self.class_names = class_names
+        self.use_grayscale = use_grayscale
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+
+        self.model = models.resnet18(weights=None)
+
+        # If model was trained on single-channel images we can uncomment this behavior
+        if self.use_grayscale:
+            self.model.conv1 = nn.Conv2d(
+                1, 64, kernel_size=7, stride=2, padding=3, bias=False
+            )
+
+        num_features = self.model.fc.in_features
+        self.model.fc = nn.Linear(num_features, len(class_names))
+
+        state = torch.load(model_path, map_location=self.device)
+        self.model.load_state_dict(state)
+        self.model.to(self.device)
+        self.model.eval()
+
+        self.face_detector = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        )
+
+        
+        #this section must match how the model was trained
+        if self.use_grayscale:
+            self.transform = transforms.Compose([
+                transforms.Grayscale(num_output_channels=1),
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5], std=[0.5])
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225]
+                )
+            ])
+
+    def detect_face(self, frame):
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        faces = self.face_detector.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(60, 60)
+        )
+
+        if len(faces) == 0:
+            return None
+
+        # pick largest face
+        faces = sorted(faces, key=lambda b: b[2] * b[3], reverse=True)
+        x, y, w, h = faces[0]
+
+        # add small padding
+        pad = 10
+        x1 = max(0, x - pad)
+        y1 = max(0, y - pad)
+        x2 = min(frame.shape[1], x + w + pad)
+        y2 = min(frame.shape[0], y + h + pad)
+
+        face_crop = frame[y1:y2, x1:x2]
+        return face_crop, (x1, y1, x2, y2)
+
+    def predict(self, frame):
+        detected = self.detect_face(frame)
+        if detected is None:
+            return ("unknown", 0.0, None)
+
+        face_crop, bbox = detected
+
+        # Convert OpenCV BGR -> RGB for PIL
+        face_rgb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
+        face_pil = Image.fromarray(face_rgb)
+
+        input_tensor = self.transform(face_pil).unsqueeze(0).to(self.device)
+
+        with torch.no_grad():
+            logits = self.model(input_tensor)
+            probs = torch.softmax(logits, dim=1)
+            conf, pred_idx = torch.max(probs, dim=1)
+
+        label = self.class_names[pred_idx.item()]
+        confidence = conf.item()
+
+        return (label, confidence, bbox)
+
+#UI configuration
 def emotion_color(emotion):
     colors = {
         "happy": (80, 220, 120),
@@ -45,6 +156,7 @@ def emotion_color(emotion):
         "unknown": (180, 180, 180),
     }
     return colors.get(emotion.lower(), (255, 255, 255))
+
 
 def draw_conf_bar(img, x, y, w, h, value, color):
     cv2.rectangle(img, (x, y), (x + w, y + h), (60, 62, 75), -1)
@@ -121,11 +233,6 @@ def put_footer(img, text):
     cv2.putText(img, text, (20, h - 20),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.65, (220, 220, 220), 2)
     
-def fake_fer():
-    # TODO: replace with real FER output
-    return ("happy", 0.72)
-
-
 def fake_ser():
     # TODO: replace with real SER output
     return ("angry", 0.78)
@@ -139,7 +246,10 @@ def late_fusion(fer, ser):
     fused_conf = (fer[1] + ser[1]) / 2.0
     return fused_conf
 
+
 def get_spell(face_label, speech_label):
+    if face_label.lower() == "unknown":
+        return None
     return SPELLS.get((face_label.lower(), speech_label.lower()), None)
 
 
@@ -159,6 +269,7 @@ def build_payload(face, fer_conf, speech, ser_conf, fused_conf, spell):
 def send_to_godot_udp(sock, payload):
     data = json.dumps(payload).encode("utf-8")
     sock.sendto(data, (GODOT_HOST, GODOT_PORT))
+
 
 def open_camera():
     for idx in [0, 1, 2, 3]:
@@ -180,8 +291,21 @@ def open_camera():
 
 def main():
     print("[INFO] Starting interface...")
-    cap = open_camera()
 
+    # Load FER model
+    try:
+        fer_model = ResNetFER(
+            model_path=MODEL_PATH,
+            class_names=CLASS_NAMES,
+            use_grayscale=USE_GRAYSCALE_MODEL
+        )
+        print(f"[INFO] FER model loaded from: {MODEL_PATH}")
+        print(f"[INFO] Running on device: {fer_model.device}")
+    except Exception as e:
+        print(f"[ERROR] Failed to load FER model: {e}")
+        return
+
+    cap = open_camera()
     if cap is None:
         print("[ERROR] Could not open webcam.")
         return
@@ -194,7 +318,10 @@ def main():
     last_combo = None
     stable_frames = 0
     last_sent_time = 0.0
-    last_sent_spell = None
+
+    # optional caching to reduce inference load
+    frame_count = 0
+    cached_fer = ("unknown", 0.0, None)
 
     while True:
         ret, frame = cap.read()
@@ -205,12 +332,19 @@ def main():
         frame = cv2.flip(frame, 1)
 
         # 1) Get model outputs
-        fer = fake_fer()
-        ser = fake_ser()
-        fused_conf = late_fusion(fer, ser)
+        frame_count += 1
 
-        face_label, face_conf = fer
+        # Run FER every frame. Change to % 2 or % 3 if you want more speed.
+        if frame_count % 1 == 0:
+            cached_fer = fer_model.predict(frame)
+
+        face_label, face_conf, face_bbox = cached_fer
+        fer = (face_label, face_conf)
+
+        ser = fake_ser()
         speech_label, speech_conf = ser
+
+        fused_conf = late_fusion(fer, ser)
 
         # 2) Build spell combo
         combo = (face_label, speech_label)
@@ -239,18 +373,33 @@ def main():
             )
             send_to_godot_udp(udp_sock, payload)
             last_sent_time = now
-            last_sent_spell = spell
             history.appendleft(f"CAST: {spell}")
             print("[INFO] Sent to Godot:", payload)
+
+        # Draw FER face box
+        if face_bbox is not None:
+            x1, y1, x2, y2 = face_bbox
+            color = emotion_color(face_label)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+            cv2.putText(
+                frame,
+                f"{face_label} {face_conf:.2f}",
+                (x1, max(25, y1 - 10)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                color,
+                2,
+                cv2.LINE_AA
+            )
 
         # 5) Build UI
         h, w = frame.shape[:2]
         panel_w = 420
-        canvas_h = max(h, 760)
+        canvas_h = h
 
         canvas = np.zeros((canvas_h, w + panel_w, 3), dtype=np.uint8)
+        canvas[:, :] = (30, 30, 30)
         canvas[:h, :w] = frame
-        canvas[:, w:] = (30, 30, 30)
 
         left_view = canvas[:h, :w]
 
@@ -270,7 +419,7 @@ def main():
 
         px1, px2 = w + 20, w + panel_w - 20
 
-        draw_card(canvas, px1, 20,  px2, 140, "FER", face_label, face_conf, emotion_color(face_label))
+        draw_card(canvas, px1, 20, px2, 140, "FER", face_label, face_conf, emotion_color(face_label))
         draw_card(canvas, px1, 155, px2, 275, "SER", speech_label, speech_conf, emotion_color(speech_label))
 
         fused_label = f"{face_label}+{speech_label}"
