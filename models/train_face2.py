@@ -124,7 +124,7 @@ if __name__ == '__main__':
         # save model if its the best  so far
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            save_path = os.path.join(SAVE_DIR, "best_face_model.pth")
+            save_path = os.path.join(SAVE_DIR, "best_face_model_no_disgust.pth")
             torch.save(model.state_dict(), save_path)
             print(f"New best model saved to {save_path}!")
 
