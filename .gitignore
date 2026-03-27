@@ -14,8 +14,9 @@ Thumbs.db
 __pycache__/
 *.pyc
 
-#vscode
+#IDE
 .vscode/
+.idea
 
 #datasets
 data/raw/
@@ -23,6 +24,7 @@ data/processed/
 
 #weights
 models/saved_weights
+results/
 
 #Mac
 # macOS specific
@@ -44,4 +46,10 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak 
+
+
+# uv
+.python-version
+*.toml
+uv.lock
 
