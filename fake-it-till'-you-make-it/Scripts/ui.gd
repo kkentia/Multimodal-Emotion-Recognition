@@ -1,0 +1,86 @@
+extends CanvasLayer
+
+@onready var text_label = $DataHUD/VBoxContainer/NLP
+@onready var fer_label = $DataHUD/VBoxContainer/FER
+@onready var ser_label = $DataHUD/VBoxContainer/SER
+@onready var webcam_feed = $WebcamFeed
+@onready var opened_book = $OpenedBook
+@onready var settings = $Settings/settings
+@onready var tutorial = $tutorial
+
+# UDP listeners
+var udp_data := PacketPeerUDP.new()
+var udp_video := PacketPeerUDP.new()
+
+func _ready() -> void:
+	opened_book.visible= false
+	settings.visible=false
+	tutorial.visible=true
+	
+	
+	
+	#listen to python script server (resnet_UI_godot_bridge.py)
+	udp_data.bind(4242)
+	udp_video.bind(4243)
+	print("Godot UDP Servers Started...")
+
+func _process(delta: float) -> void:
+	# 1. RECEIVE LIVE VIDEO FRAMES
+	if udp_video.get_available_packet_count() > 0:
+		var packet = udp_video.get_packet()
+		var img = Image.new()
+		var error = img.load_jpg_from_buffer(packet)
+		if error == OK:
+			# Create a texture from the JPEG and apply it to the UI
+			webcam_feed.texture = ImageTexture.create_from_image(img)
+
+	# 2. RECEIVE JSON DATA
+	if udp_data.get_available_packet_count() > 0:
+		var packet = udp_data.get_packet()
+		var json_string = packet.get_string_from_utf8()
+		var dict = JSON.parse_string(json_string)
+		
+		if dict:
+			#send the received py data to the UI text update func
+			update_ai_text(
+				dict["spell"], 
+				dict["face_emotion"], dict["face_confidence"], 
+				dict["speech_emotion"], dict["speech_confidence"]
+			)
+			
+			#send data up to Main Level to cast spell
+			if get_parent().has_method("process_ai_input"):
+				get_parent().process_ai_input(
+					dict["spell"], 
+					dict["face_emotion"], dict["face_confidence"], 
+					dict["speech_emotion"], dict["speech_confidence"]
+				)
+
+	
+func update_ai_text(spell: String, fer_emo: String, fer_prob: float, ser_emo: String, ser_prob: float):
+	text_label.text = "Spell: " + str(spell)
+	fer_label.text = "Face: " + fer_emo + " " + str(int(fer_prob * 100)) + "%"
+	ser_label.text = "Voice: " + ser_emo + " " + str(int(ser_prob * 100)) + "%"
+
+
+
+
+func _on_spellbook_btn_pressed() -> void:
+	opened_book.visible = not opened_book.visible
+
+func _on_settings_pressed() -> void:
+	settings.visible = not settings.visible
+	print("Settings toggled!")
+
+
+func _on_close_btn_pressed() -> void:
+	settings.visible= false
+	tutorial.visible=false
+
+
+func _on_exit_game_pressed() -> void:
+	get_tree().change_scene_to_file("res://Scences/StartScreen.tscn")
+
+
+func _on_open_tutorial_pressed() -> void:
+	tutorial.visible=true

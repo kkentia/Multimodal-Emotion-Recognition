@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://sgedgfqgegxq"]
+
+[ext_resource type="Script" uid="uid://x0durr3onfqq" path="res://Scripts/start_screen.gd" id="1_iocx0"]
+[ext_resource type="FontFile" uid="uid://cfgp6j8ahhu8j" path="res://Assets/Fonts/bucheri-demo/BucheriDEMO-Regular.otf" id="2_hev48"]
+
+[node name="StartScreen" type="Control" unique_id=1553824454]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_iocx0")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=9427748]
+layout_mode = 0
+offset_right = 1156.0
+offset_bottom = 646.0
+
+[node name="PlayBtn" type="Button" parent="TextureRect" unique_id=756624221]
+layout_mode = 0
+offset_left = 309.0
+offset_top = 77.0
+offset_right = 836.0
+offset_bottom = 323.0
+theme_override_fonts/font = ExtResource("2_hev48")
+theme_override_font_sizes/font_size = 50
+text = "PLAY"
+
+[connection signal="pressed" from="TextureRect/PlayBtn" to="." method="_on_play_btn_pressed"]

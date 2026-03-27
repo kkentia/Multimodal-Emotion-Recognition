@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://dxomyuberu6j2"]
+
+[ext_resource type="Texture2D" uid="uid://dvftutfsfpj26" path="res://Assets/Sprites/level2night.png" id="1_81aqe"]
+[ext_resource type="Script" uid="uid://d27q1jieeciy0" path="res://Scripts/main_lvl.gd" id="1_y8r8y"]
+[ext_resource type="PackedScene" uid="uid://c513305fso2k3" path="res://Scences/Enemy.tscn" id="2_er1sx"]
+[ext_resource type="Texture2D" uid="uid://bkmbmvvmmcgao" path="res://Assets/Sprites/foregroundNight.png" id="3_1dgwv"]
+[ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="5_otse2"]
+
+[node name="MainLvl" type="Node2D" unique_id=534353231]
+script = ExtResource("1_y8r8y")
+
+[node name="Background" type="Sprite2D" parent="." unique_id=2124034026]
+position = Vector2(574.24994, 324.25)
+scale = Vector2(0.4862288, 0.39603657)
+texture = ExtResource("1_81aqe")
+
+[node name="Enemy" parent="." unique_id=450527774 instance=ExtResource("2_er1sx")]
+position = Vector2(558, 426)
+scale = Vector2(0.39, 0.39)
+
+[node name="foreground" type="Sprite2D" parent="." unique_id=1471897837]
+position = Vector2(575.50006, 322.5)
+scale = Vector2(0.48601696, 0.3945122)
+texture = ExtResource("3_1dgwv")
+
+[node name="UI" parent="." unique_id=1263911513 instance=ExtResource("5_otse2")]
