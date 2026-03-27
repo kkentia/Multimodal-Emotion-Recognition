@@ -4,7 +4,7 @@ const CONFIDENCE_THRESHOLD = 0.7
 
 @onready var ui = $UI
 @onready var enemy = $Enemy
-
+@onready var audio_stream = $AudioStreamPlayer2D
 
 
 #player stats:
@@ -46,3 +46,7 @@ func cast_spell(spell_name: String):
 			player_current_health=player_current_health
 		ui.update_player_health(player_current_health)
 	
+
+
+func _on_audio_stream_player_2d_finished() -> void:
+	audio_stream.play() #does i loop (i hope)

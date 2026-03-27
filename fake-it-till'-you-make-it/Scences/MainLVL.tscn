@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://c513305fso2k3" path="res://Scences/Enemy.tscn" id="2_er1sx"]
 [ext_resource type="Texture2D" uid="uid://bkmbmvvmmcgao" path="res://Assets/Sprites/foregroundNight.png" id="3_1dgwv"]
 [ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="5_otse2"]
+[ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="6_n0bbk"]
 
 [node name="MainLvl" type="Node2D" unique_id=534353231]
 script = ExtResource("1_y8r8y")
@@ -24,3 +25,9 @@ scale = Vector2(0.48601696, 0.3945122)
 texture = ExtResource("3_1dgwv")
 
 [node name="UI" parent="." unique_id=1263911513 instance=ExtResource("5_otse2")]
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=702303410]
+stream = ExtResource("6_n0bbk")
+autoplay = true
+
+[connection signal="finished" from="AudioStreamPlayer2D" to="." method="_on_audio_stream_player_2d_finished"]

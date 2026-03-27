@@ -8,6 +8,8 @@ extends CanvasLayer
 @onready var settings = $Settings/settings
 @onready var tutorial = $tutorial
 @onready var player_health_bar =$PlayerHealthBar
+@onready var audio_stream = $"../AudioStreamPlayer2D"
+@onready var audio_check_button= $Settings/settings/TextureRect/AudioCheckButton
 
 # UDP listeners
 # := sets the variable type to whatever is on the other side of the equal sign
@@ -18,6 +20,7 @@ func _ready() -> void:
 	opened_book.visible= false
 	settings.visible=false
 	tutorial.visible=true
+	audio_check_button.button_pressed=true
 	
 	
 	
@@ -102,4 +105,11 @@ func _on_open_tutorial_pressed() -> void:
 	
 	
 	
+	
+
+
+func _on_check_button_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		audio_stream.volume_db= 0 #unmute
+	else: audio_stream.volume_db=-100 ##not audible to human ear
 	
