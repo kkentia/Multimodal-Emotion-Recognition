@@ -25,14 +25,14 @@ func _ready() -> void:
 	
 	
 	#listen to python script server (resnet_UI_godot_bridge.py)
-	var err = udp_video.bind(4242) #video
-	if err == OK:
-		print("🟢 Godot is listening for AI on UDP port 4242...")
-	else:
-		print("🔴 Failed to bind UDP port! Is another app using 4242?")
-		
-	udp_video.bind(4243)#audio
+	udp_data.bind(4242)
+	udp_video.bind(4243)
 	print("Godot UDP Servers Started...")
+		
+	#udp_video.bind(4243)#audio
+	print("Godot UDP Servers Started...")
+
+
 
 func _process(delta: float) -> void:
 	# 1. RECEIVE LIVE VIDEO FRAMES
@@ -112,4 +112,3 @@ func _on_check_button_toggled(toggled_on: bool) -> void:
 	if toggled_on:
 		audio_stream.volume_db= 0 #unmute
 	else: audio_stream.volume_db=-100 ##not audible to human ear
-	

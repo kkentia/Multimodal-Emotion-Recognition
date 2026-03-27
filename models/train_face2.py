@@ -14,7 +14,7 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 BATCH_SIZE = 64 #is 1-dimensional; batch_size=labels.size(0) so e.g. [0,5,3,2...] where 0 is angry etc.
 EPOCHS = 10
 LEARNING_RATE = 0.0001 # lower than in train_face1
-NUM_CLASSES = 6 # Angry, Disgust, Fear, Happy, Neutral, Sad
+NUM_CLASSES = 5 # Angry, Disgust, Fear, Happy, Neutral, Sad #removed disgust
 
 #select available device
 if torch.cuda.is_available():

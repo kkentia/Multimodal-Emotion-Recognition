@@ -92,7 +92,6 @@ offset_bottom = 334.0
 text = "See Instructions"
 
 [node name="tutorial" type="ColorRect" parent="." unique_id=112637210]
-visible = false
 offset_left = -21.0
 offset_top = -8.0
 offset_right = 1181.0
