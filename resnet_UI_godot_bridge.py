@@ -22,13 +22,14 @@ CONF_THRESHOLD = 0.60
 WINDOW_NAME = "Emotion Spell Interface"
 
 # Path to the Resnet18 model
-MODEL_PATH = "resnet18_emotion.pth"
+MODEL_PATH = "models/saved_weights/best_face_model.pth"
+
 
 #we need to check if these match with the emotions from the model 
-CLASS_NAMES = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
+CLASS_NAMES =["angry", "disgust", "fear", "happy", "neutral", "sad"]
 
 #was model trained with greyscale input? 
-USE_GRAYSCALE_MODEL = False
+USE_GRAYSCALE_MODEL = False #model was trained on rgb images
 
 #three modes for the prediction
 class Mode(Enum):
@@ -37,7 +38,7 @@ class Mode(Enum):
     FUSED = 3
 
 #example for spells we could include
-SPELLS = {
+SPELLS = { #change some that arent using our 5 emotions
     ("happy", "angry"): "fire_orb",
     ("sad", "fear"): "ice_wall",
     ("surprise", "happy"): "light_burst",
@@ -150,10 +151,10 @@ def emotion_color(emotion):
         "happy": (80, 220, 120),
         "sad": (255, 140, 90),
         "angry": (80, 80, 255),
-        "surprise": (80, 220, 255),
+        "surprise": (80, 220, 255), #delete this
         "fear": (180, 120, 255),
         "neutral": (200, 200, 210),
-        "unknown": (180, 180, 180),
+        "unknown": (180, 180, 180), #delete this
     }
     return colors.get(emotion.lower(), (255, 255, 255))
 
@@ -238,11 +239,8 @@ def fake_ser():
     return ("angry", 0.78)
 
 
+#returns a fused confidence score. Labels remain separate bcz the game spell is based on the pair (face, speech)
 def late_fusion(fer, ser):
-    """
-    Returns a fused confidence. Labels remain separate because
-    the game spell is based on the pair (face, speech).
-    """
     fused_conf = (fer[1] + ser[1]) / 2.0
     return fused_conf
 
@@ -273,7 +271,7 @@ def send_to_godot_udp(sock, payload):
 
 def open_camera():
     for idx in [0, 1, 2, 3]:
-        print(f"[INFO] Trying camera index {idx}...")
+        print(f"Trying camera index {idx}...")
         cap = cv2.VideoCapture(idx)
 
         if not cap.isOpened():
@@ -282,7 +280,7 @@ def open_camera():
 
         ret, frame = cap.read()
         if ret and frame is not None:
-            print(f"[INFO] Using camera index {idx}")
+            print(f"Using camera index {idx}")
             return cap
 
         cap.release()
@@ -290,161 +288,71 @@ def open_camera():
     return None
 
 def main():
-    print("[INFO] Starting interface...")
+    print("Starting Video Server...")
 
-    # Load FER model
     try:
-        fer_model = ResNetFER(
-            model_path=MODEL_PATH,
-            class_names=CLASS_NAMES,
-            use_grayscale=USE_GRAYSCALE_MODEL
-        )
-        print(f"[INFO] FER model loaded from: {MODEL_PATH}")
-        print(f"[INFO] Running on device: {fer_model.device}")
+        fer_model = ResNetFER(MODEL_PATH, CLASS_NAMES, USE_GRAYSCALE_MODEL)
     except Exception as e:
-        print(f"[ERROR] Failed to load FER model: {e}")
+        print(f"Failed to load FER model: {e}")
         return
 
     cap = open_camera()
-    if cap is None:
-        print("[ERROR] Could not open webcam.")
-        return
+    if cap is None: return
 
+    # we use 1 socket to send data to port 4242, video to 4243
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    mode = Mode.FUSED
-    history = deque(maxlen=10)
+    VIDEO_PORT = 4243
 
     last_combo = None
     stable_frames = 0
     last_sent_time = 0.0
 
-    # optional caching to reduce inference load
-    frame_count = 0
-    cached_fer = ("unknown", 0.0, None)
-
     while True:
         ret, frame = cap.read()
-        if not ret or frame is None:
-            print("[ERROR] Failed to grab frame.")
-            break
-
+        if not ret: break
         frame = cv2.flip(frame, 1)
 
-        # 1) Get model outputs
-        frame_count += 1
-
-        # Run FER every frame. Change to % 2 or % 3 if you want more speed.
-        if frame_count % 1 == 0:
-            cached_fer = fer_model.predict(frame)
-
-        face_label, face_conf, face_bbox = cached_fer
+        # 1. get preds
+        face_label, face_conf, face_bbox = fer_model.predict(frame)
         fer = (face_label, face_conf)
-
-        ser = fake_ser()
-        speech_label, speech_conf = ser
-
-        fused_conf = late_fusion(fer, ser)
-
-        # 2) Build spell combo
-        combo = (face_label, speech_label)
+        
+        speech_label, speech_conf = fake_ser() # From her fake_ser function
+        fused_conf = late_fusion(fer, (speech_label, speech_conf))
         spell = get_spell(face_label, speech_label)
 
-        # 3) Stability check
+        # 2. draw the colored bounding boxes on the face
+        if face_bbox is not None:
+            x1, y1, x2, y2 = face_bbox
+            color = emotion_color(face_label)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+            cv2.putText(frame, f"{face_label} {face_conf:.2f}", (x1, max(25, y1 - 10)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2, cv2.LINE_AA)
+
+        # 3. stream video to godot
+        # We resize to 480x360 so the JPEG is small enough to fit in a single UDP packet!
+        small_frame = cv2.resize(frame, (480, 360))
+        _, jpg_buffer = cv2.imencode('.jpg', small_frame,[cv2.IMWRITE_JPEG_QUALITY, 70])
+        udp_sock.sendto(jpg_buffer.tobytes(), (GODOT_HOST, VIDEO_PORT))
+
+        # 4. stream JSON data to GD
+        combo = (face_label, speech_label)
         if combo == last_combo:
             stable_frames += 1
         else:
             stable_frames = 0
             last_combo = combo
 
-        ready = (
-            spell is not None
-            and fused_conf >= CONF_THRESHOLD
-            and stable_frames >= STABLE_REQUIRED_FRAMES
-        )
-
-        # 4) Send event to Godot if stable and not too frequent
         now = time.time()
+        ready = (spell is not None and fused_conf >= CONF_THRESHOLD and stable_frames >= STABLE_REQUIRED_FRAMES)
+        
         if ready and (now - last_sent_time >= SEND_INTERVAL):
-            payload = build_payload(
-                face_label, face_conf,
-                speech_label, speech_conf,
-                fused_conf, spell
-            )
+            payload = build_payload(face_label, face_conf, speech_label, speech_conf, fused_conf, spell)
             send_to_godot_udp(udp_sock, payload)
             last_sent_time = now
-            history.appendleft(f"CAST: {spell}")
-            print("[INFO] Sent to Godot:", payload)
-
-        # Draw FER face box
-        if face_bbox is not None:
-            x1, y1, x2, y2 = face_bbox
-            color = emotion_color(face_label)
-            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-            cv2.putText(
-                frame,
-                f"{face_label} {face_conf:.2f}",
-                (x1, max(25, y1 - 10)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.7,
-                color,
-                2,
-                cv2.LINE_AA
-            )
-
-        # 5) Build UI
-        h, w = frame.shape[:2]
-        panel_w = 420
-        canvas_h = h
-
-        canvas = np.zeros((canvas_h, w + panel_w, 3), dtype=np.uint8)
-        canvas[:, :] = (30, 30, 30)
-        canvas[:h, :w] = frame
-
-        left_view = canvas[:h, :w]
-
-        if mode == Mode.FER_ONLY:
-            hud_text = f"FER: {face_label.upper()} ({face_conf:.2f})"
-            hud_color = emotion_color(face_label)
-        elif mode == Mode.SER_ONLY:
-            hud_text = f"SER: {speech_label.upper()} ({speech_conf:.2f})"
-            hud_color = emotion_color(speech_label)
-        else:
-            spell_name = spell if spell else "none"
-            hud_text = f"FUSED: {face_label.upper()} + {speech_label.upper()} -> {spell_name}"
-            hud_color = (255, 170, 60)
-
-        put_hud(left_view, hud_text, hud_color)
-        put_footer(left_view, "Keys: 1=FER  2=SER  3=FUSED  Q/Esc=quit")
-
-        px1, px2 = w + 20, w + panel_w - 20
-
-        draw_card(canvas, px1, 20, px2, 140, "FER", face_label, face_conf, emotion_color(face_label))
-        draw_card(canvas, px1, 155, px2, 275, "SER", speech_label, speech_conf, emotion_color(speech_label))
-
-        fused_label = f"{face_label}+{speech_label}"
-        draw_card(canvas, px1, 290, px2, 410, "FUSED", fused_label, fused_conf, (255, 170, 60))
-
-        draw_spell_panel(canvas, px1, 425, px2, 575, face_label, speech_label, spell, ready)
-        draw_history(canvas, px1, 610, history)
-
-        cv2.imshow(WINDOW_NAME, canvas)
-
-        key = cv2.waitKey(1) & 0xFF
-        if key in (ord("q"), 27):
-            print("[INFO] Quit key pressed.")
-            break
-        elif key == ord("1"):
-            mode = Mode.FER_ONLY
-        elif key == ord("2"):
-            mode = Mode.SER_ONLY
-        elif key == ord("3"):
-            mode = Mode.FUSED
+            print(f"Cast Spell: {spell}")
 
     udp_sock.close()
     cap.release()
-    cv2.destroyAllWindows()
-    print("[INFO] Clean exit.")
 
 
 if __name__ == "__main__":
