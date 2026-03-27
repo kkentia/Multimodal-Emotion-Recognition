@@ -7,8 +7,10 @@ extends CanvasLayer
 @onready var opened_book = $OpenedBook
 @onready var settings = $Settings/settings
 @onready var tutorial = $tutorial
+@onready var player_health_bar =$PlayerHealthBar
 
 # UDP listeners
+# := sets the variable type to whatever is on the other side of the equal sign
 var udp_data := PacketPeerUDP.new()
 var udp_video := PacketPeerUDP.new()
 
@@ -20,8 +22,13 @@ func _ready() -> void:
 	
 	
 	#listen to python script server (resnet_UI_godot_bridge.py)
-	udp_data.bind(4242)
-	udp_video.bind(4243)
+	var err = udp_video.bind(4242) #video
+	if err == OK:
+		print("🟢 Godot is listening for AI on UDP port 4242...")
+	else:
+		print("🔴 Failed to bind UDP port! Is another app using 4242?")
+		
+	udp_video.bind(4243)#audio
 	print("Godot UDP Servers Started...")
 
 func _process(delta: float) -> void:
@@ -65,6 +72,13 @@ func update_ai_text(spell: String, fer_emo: String, fer_prob: float, ser_emo: St
 
 
 
+func update_player_health(current_health:int):
+	player_health_bar.value=current_health
+
+
+
+
+
 func _on_spellbook_btn_pressed() -> void:
 	opened_book.visible = not opened_book.visible
 
@@ -84,3 +98,8 @@ func _on_exit_game_pressed() -> void:
 
 func _on_open_tutorial_pressed() -> void:
 	tutorial.visible=true
+	
+	
+	
+	
+	

@@ -5,8 +5,14 @@ const CONFIDENCE_THRESHOLD = 0.7
 @onready var ui = $UI
 @onready var enemy = $Enemy
 
+
+
+#player stats:
+var player_max_health : int = 100
+var player_current_health: int = 100
+
 func _ready() -> void:
-	pass
+	ui.update_player_health(player_current_health)
 
 func process_ai_input(spoken_word: String, fer_emotion: String, fer_prob: float, ser_emotion: String, ser_prob: float):
 	# send data to the UI scene so it can display the txt 
@@ -24,8 +30,19 @@ func process_ai_input(spoken_word: String, fer_emotion: String, fer_prob: float,
 		cast_spell("Fireball")
 	elif spoken_word == "baffle" and fer_emotion == "Happy" and ser_emotion == "Angry":
 		cast_spell("Confusion")
+	elif spoken_word == "restore" and fer_emotion == "Happy" and ser_emotion == "Happy":
+		cast_spell("Healing")
 		
 func cast_spell(spell_name: String):
 	print("Successfully cast: ", spell_name)
-	if is_instance_valid(enemy):
-		enemy.take_dmg()
+	
+	if spell_name == "Fireball":
+		if is_instance_valid(enemy):
+			enemy.take_dmg()
+			
+	elif spell_name=="Healing":
+		player_current_health+=20
+		if player_current_health > player_max_health:
+			player_current_health=player_current_health
+		ui.update_player_health(player_current_health)
+	
