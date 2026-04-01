@@ -22,7 +22,7 @@ CONF_THRESHOLD = 0.60
 WINDOW_NAME = "Emotion Spell Interface"
 
 # Path to the Resnet18 model
-MODEL_PATH = "models/saved_weights/best_face_model.pth"
+MODEL_PATH = "models/saved_weights/best_video_model.pth"
 
 
 #we need to check if these match with the emotions from the model 
