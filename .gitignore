@@ -2,7 +2,7 @@
 *.venv2
 *.jpg
 *.zip
-
+*.csv
 
 # Windows junk
 Thumbs.db
