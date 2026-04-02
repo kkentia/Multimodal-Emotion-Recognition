@@ -5,14 +5,18 @@ const CONFIDENCE_THRESHOLD = 0.7
 @onready var ui = $UI
 @onready var enemy = $Enemy
 @onready var audio_stream = $AudioStreamPlayer2D
+@onready var you_won_label = $you_won
 
 
 #player stats:
 var player_max_health : int = 100
 var player_current_health: int = 100
+var defeated_enemies  = 0
 
 func _ready() -> void:
+	you_won_label.visible=false
 	ui.update_player_health(player_current_health)
+	enemy.get_node("enemy_area").enemy_died.connect(_on_enemy_died)
 
 func process_ai_input(spoken_word: String, fer_emotion: String, fer_prob: float, ser_emotion: String, ser_prob: float):
 	# send data to the UI scene so it can display the txt 
@@ -50,3 +54,13 @@ func cast_spell(spell_name: String):
 
 func _on_audio_stream_player_2d_finished() -> void:
 	audio_stream.play() #does i loop (i hope)
+
+
+
+func _on_enemy_died():
+	defeated_enemies += 1
+	win()
+	
+func win():
+	if defeated_enemies == 3:
+		you_won_label.visible =true

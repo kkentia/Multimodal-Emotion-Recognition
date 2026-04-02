@@ -1,11 +1,12 @@
 [gd_scene format=3 uid="uid://dxomyuberu6j2"]
 
-[ext_resource type="Texture2D" uid="uid://dvftutfsfpj26" path="res://Assets/Sprites/level2night.png" id="1_81aqe"]
 [ext_resource type="Script" uid="uid://d27q1jieeciy0" path="res://Scripts/main_lvl.gd" id="1_y8r8y"]
 [ext_resource type="PackedScene" uid="uid://c513305fso2k3" path="res://Scences/Enemy.tscn" id="2_er1sx"]
+[ext_resource type="Texture2D" uid="uid://boyl613i2ekb6" path="res://Assets/Sprites/level1night.jpg" id="2_n0bbk"]
 [ext_resource type="Texture2D" uid="uid://bkmbmvvmmcgao" path="res://Assets/Sprites/foregroundNight.png" id="3_1dgwv"]
 [ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="5_otse2"]
 [ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="6_n0bbk"]
+[ext_resource type="FontFile" uid="uid://cfgp6j8ahhu8j" path="res://Assets/Fonts/bucheri-demo/BucheriDEMO-Regular.otf" id="7_2r8x1"]
 
 [node name="MainLvl" type="Node2D" unique_id=534353231]
 script = ExtResource("1_y8r8y")
@@ -13,7 +14,7 @@ script = ExtResource("1_y8r8y")
 [node name="Background" type="Sprite2D" parent="." unique_id=2124034026]
 position = Vector2(574.24994, 324.25)
 scale = Vector2(0.4862288, 0.39603657)
-texture = ExtResource("1_81aqe")
+texture = ExtResource("2_n0bbk")
 
 [node name="Enemy" parent="." unique_id=450527774 instance=ExtResource("2_er1sx")]
 position = Vector2(558, 426)
@@ -25,9 +26,19 @@ scale = Vector2(0.48601696, 0.3945122)
 texture = ExtResource("3_1dgwv")
 
 [node name="UI" parent="." unique_id=1263911513 instance=ExtResource("5_otse2")]
+visible = false
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=702303410]
 stream = ExtResource("6_n0bbk")
 autoplay = true
+
+[node name="you_won" type="Label" parent="." unique_id=1023757549]
+offset_left = 450.0
+offset_top = 139.0
+offset_right = 693.0
+offset_bottom = 244.0
+theme_override_fonts/font = ExtResource("7_2r8x1")
+theme_override_font_sizes/font_size = 50
+text = "YOU WON! "
 
 [connection signal="finished" from="AudioStreamPlayer2D" to="." method="_on_audio_stream_player_2d_finished"]
