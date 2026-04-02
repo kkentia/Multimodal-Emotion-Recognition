@@ -26,7 +26,6 @@ scale = Vector2(0.48601696, 0.3945122)
 texture = ExtResource("3_1dgwv")
 
 [node name="UI" parent="." unique_id=1263911513 instance=ExtResource("5_otse2")]
-visible = false
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=702303410]
 stream = ExtResource("6_n0bbk")

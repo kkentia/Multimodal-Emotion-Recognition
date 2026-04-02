@@ -20,19 +20,18 @@ os.makedirs(DEST_DIR, exist_ok=True)
 
 EMOTION_MAP = {
     "01": "neutral",
-    "02": "neutral", # Merging 'Calm' into 'Neutral'
+    "02": "neutral", # merging calm into neutral
     "03": "happy",
     "04": "sad",
     "05": "angry",
     "06": "fear",
-    "07": "disgust"  # Kept in case you want to use it later
-    # "08": "surprise" is intentionally omitted
+    "07": "disgust"  
 }
 
 def organize_ravdess_videos():
     print(f"Scanning raw RAVDESS directory: {RAW_RAVDESS_DIR}")
     
-    # Create target directories
+    # create target directories
     for emo_name in set(EMOTION_MAP.values()):
         os.makedirs(os.path.join(DEST_DIR, emo_name), exist_ok=True)
         

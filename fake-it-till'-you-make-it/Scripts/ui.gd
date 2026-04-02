@@ -34,15 +34,16 @@ func _ready() -> void:
 
 
 
-func _process(delta: float) -> void:
-	# 1. RECEIVE LIVE VIDEO FRAMES
+func _process(_delta: float) -> void:  # fix the warning too
 	if udp_video.get_available_packet_count() > 0:
 		var packet = udp_video.get_packet()
+		print("Video packet received, size: ", packet.size())  # are packets arriving?
 		var img = Image.new()
 		var error = img.load_jpg_from_buffer(packet)
+		print("Image load error code: ", error)  # is 0 (OK)?
 		if error == OK:
-			# Create a texture from the JPEG and apply it to the UI
 			webcam_feed.texture = ImageTexture.create_from_image(img)
+			print("Texture applied")  # is this reached?
 
 	# 2. RECEIVE JSON DATA
 	if udp_data.get_available_packet_count() > 0:
