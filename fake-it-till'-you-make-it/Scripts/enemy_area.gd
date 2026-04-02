@@ -4,6 +4,7 @@ var max_health: int=5
 var current_health: int = 5
 
 @onready var health_bar = $"../EnemyHealthBar"
+@onready var hurt_sound = $"../AudioStreamPlayer2D"
 
 
 signal enemy_died # to broadcast to main for defeated_enemies
@@ -15,6 +16,7 @@ func _ready():
 func take_dmg():
 	current_health -= 1
 	health_bar.value = current_health
+	hurt_sound.play()
 	
 	#add effects or sounds later here
 	#$Sprite2D.modulate =Color(1,0,0) 
