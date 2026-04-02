@@ -66,7 +66,9 @@ func _process(_delta: float) -> void:  # fix the warning too
 					dict["face_emotion"], dict["face_confidence"], 
 					dict["speech_emotion"], dict["speech_confidence"]
 				)
-
+	
+	if Input.is_action_just_pressed("ui_cancel"): #this is escape by default for some reason
+		settings.visible= not settings.visible
 	
 func update_ai_text(spell: String, fer_emo: String, fer_prob: float, ser_emo: String, ser_prob: float):
 	text_label.text = "Spell: " + str(spell)
@@ -102,14 +104,13 @@ func _on_exit_game_pressed() -> void:
 
 func _on_open_tutorial_pressed() -> void:
 	tutorial.visible=true
-	
-	
-	
-	
-	
 
 
 func _on_check_button_toggled(toggled_on: bool) -> void:
 	if toggled_on:
 		audio_stream.volume_db= 0 #unmute
 	else: audio_stream.volume_db=-100 ##not audible to human ear
+	
+
+
+	

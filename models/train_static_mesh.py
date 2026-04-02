@@ -1,5 +1,5 @@
 # Epoch [100/100] | Val Acc: 54.08% probably bcz it struggles with 'digust' emotion
-
+# without disgust: Epoch [100/100] | Val Acc: 54.98% --> nope, that wasnt it.
 import os
 import pandas as pd
 import torch
@@ -17,7 +17,7 @@ BATCH_SIZE = 64
 EPOCHS = 100
 LEARNING_RATE = 0.001
 INPUT_FEATURES = 10
-NUM_CLASSES = 6 # happy, sad, fear, angry, disgust ( maybe delete it)
+NUM_CLASSES = 5 # happy, sad, fear, angry, neutral, disgust ( maybe delete it)
 
 class StaticDataset(Dataset):  # we fill feed it the .csv ds in the form of a pandas Numpy Array
     def __init__(self, X, y): # X is the data, y is the labels
@@ -92,4 +92,4 @@ if __name__ == '__main__':
         if (epoch+1) % 10 == 0:
             print(f"Epoch [{epoch+1}/{EPOCHS}] | Val Acc: {val_acc:.2f}%")
 
-    print(f"🎉 Complete! Max Validation Accuracy: {best_acc:.2f}%")
+    print(f"Complete! Max Validation Accuracy: {best_acc:.2f}%")

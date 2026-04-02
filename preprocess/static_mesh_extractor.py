@@ -17,7 +17,9 @@ options = vision.FaceLandmarkerOptions(base_options=base_options, num_faces=1)
 detector = vision.FaceLandmarker.create_from_options(options)
 
 # 6 emotions 
-EMOTIONS = {"angry": 0, "disgust": 1, "fear": 2, "happy": 3, "neutral": 4, "sad": 5}
+#EMOTIONS = {"angry": 0, "disgust": 1, "fear": 2, "happy": 3, "neutral": 4, "sad": 5}
+EMOTIONS = {"angry": 0, "fear": 1, "happy": 2, "neutral": 3, "sad": 4} # rm disgust
+
 
 def calc_distance(p1, p2, w, h):
     # multiply by width and height to fix Webcam vs Dataset Aspect Ratio stretching

@@ -18,7 +18,7 @@ STABLE_REQUIRED_FRAMES = 10
 CONF_THRESHOLD = 0.60 
 
 # Must be 6 emotions matching the training script exactly!
-CLASS_NAMES =["angry", "disgust", "fear", "happy", "neutral", "sad"]
+CLASS_NAMES =["angry", "fear", "happy", "neutral", "sad"]
 MODEL_PATH = "models/saved_weights/best_static_mesh.pth"
 TASK_PATH = "models/face_landmarker.task"
 
@@ -71,7 +71,7 @@ def emotion_color(emotion):
     colors = {
         "happy": (80, 220, 120), "sad": (255, 140, 90),
         "angry": (80, 80, 255),  "fear": (180, 120, 255),
-        "disgust": (180, 200, 80), "neutral": (200, 200, 210),
+        "neutral": (200, 200, 210),
         "unknown": (180, 180, 180),
     }
     return colors.get(emotion.lower(), (255, 255, 255))
