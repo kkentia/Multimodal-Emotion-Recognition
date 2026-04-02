@@ -17,7 +17,7 @@ BATCH_SIZE = 64
 EPOCHS = 100
 LEARNING_RATE = 0.001
 INPUT_FEATURES = 10
-NUM_CLASSES = 5 # happy, sad, fear, angry, neutral, disgust ( maybe delete it)
+NUM_CLASSES = 6 # happy, sad, fear, angry, neutral, disgust ( maybe delete it)
 
 class StaticDataset(Dataset):  # we fill feed it the .csv ds in the form of a pandas Numpy Array
     def __init__(self, X, y): # X is the data, y is the labels
