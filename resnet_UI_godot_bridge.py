@@ -27,7 +27,6 @@ MODEL_PATH = "resnet18_emotion.pth"
 #we need to check if these match with the emotions from the model 
 CLASS_NAMES = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
 
-#was model trained with greyscale input? 
 USE_GRAYSCALE_MODEL = False
 
 #three modes for the prediction
