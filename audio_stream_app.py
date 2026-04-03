@@ -48,7 +48,6 @@ class AudioInterfaceConfig:
 
 class AudioPackager:
     def __init__(self, config: AudioInterfaceConfig, model_path: Optional[str] = None):
-        # ... existing init code ...
         
         self.model = None
         self.feature_extractor = None
@@ -93,7 +92,7 @@ class AudioPackager:
             saved_path = self.save_window_to_wav(raw_audio, filename)
             payload["saved_wav"] = str(saved_path)
 
-        # MODEL INFERENCE - only run if model is loaded and VAD passes
+        # Model inference: only run if model is loaded and VAD passes
         if self.model is not None and payload["vad_keep"]:
             emotion_probs = self.run_emotion_inference(audio)
             payload["emotion_probs"] = emotion_probs
