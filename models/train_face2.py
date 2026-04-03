@@ -14,7 +14,7 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 BATCH_SIZE = 64 #is 1-dimensional; batch_size=labels.size(0) so e.g. [0,5,3,2...] where 0 is angry etc.
 EPOCHS = 10
 LEARNING_RATE = 0.0001 # lower than in train_face1
-NUM_CLASSES = 6 # Angry, Disgust, Fear, Happy, Neutral, Sad
+NUM_CLASSES = 5 # Angry, Disgust, Fear, Happy, Neutral, Sad #removed disgust
 
 #select available device
 if torch.cuda.is_available():
@@ -124,7 +124,7 @@ if __name__ == '__main__':
         # save model if its the best  so far
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            save_path = os.path.join(SAVE_DIR, "best_face_model.pth")
+            save_path = os.path.join(SAVE_DIR, "best_face_model_no_disgust.pth")
             torch.save(model.state_dict(), save_path)
             print(f"New best model saved to {save_path}!")
 

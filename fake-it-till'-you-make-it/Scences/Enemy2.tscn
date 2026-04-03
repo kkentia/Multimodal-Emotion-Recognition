@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://b8cqfcc1cwkm1"]
+
+[ext_resource type="Script" uid="uid://csh30kvvpcr20" path="res://Scripts/enemy_area.gd" id="1_tocsi"]
+[ext_resource type="Texture2D" uid="uid://bi1nu3nms4lkb" path="res://Assets/Sprites/enemy2.png" id="2_tocsi"]
+[ext_resource type="AudioStream" uid="uid://wc2fsammkibe" path="res://Assets/Audio/assets_audio_death_sound.wav" id="3_x66a6"]
+
+[sub_resource type="GDScript" id="GDScript_fne5p"]
+script/source = "extends Node2D
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	pass
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fne5p"]
+size = Vector2(750, 913.5)
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_fne5p"]
+color = Color(3.802, 0, 0, 0.318)
+thickness = 50
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4ap5x"]
+bg_color = Color(0.5372549, 0, 0.03529412, 1)
+
+[node name="Enemy" type="Node2D" unique_id=450527774]
+script = SubResource("GDScript_fne5p")
+
+[node name="enemy_area" type="Area2D" parent="." unique_id=1291536171]
+script = ExtResource("1_tocsi")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="enemy_area" unique_id=574823241]
+position = Vector2(8, 2.75)
+shape = SubResource("RectangleShape2D_fne5p")
+
+[node name="enemy_sprite" type="Sprite2D" parent="enemy_area" unique_id=956897314]
+position = Vector2(-17, -159)
+texture = ExtResource("2_tocsi")
+
+[node name="EnemyHealthBar" type="ProgressBar" parent="." unique_id=1738163730]
+offset_left = -646.0
+offset_top = -919.0
+offset_right = 649.0
+offset_bottom = -869.0
+theme_override_styles/background = SubResource("StyleBoxLine_fne5p")
+theme_override_styles/fill = SubResource("StyleBoxFlat_4ap5x")
+max_value = 5.0
+step = 0.1
+value = 5.0
+show_percentage = false
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1445370704]
+stream = ExtResource("3_x66a6")
+volume_db = 24.0

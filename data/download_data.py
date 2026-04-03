@@ -12,7 +12,7 @@ DATASETS = {
     "fer2013": "msambare/fer2013",
     "ravdess": "orvile/ravdess-dataset",
     "cremad": "ejlok1/cremad",
-    "ck": "davilsena/ckdataset"
+    "ck": "shuvoalok/ck-dataset"
 }
 
 def download_and_move():
