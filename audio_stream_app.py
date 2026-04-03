@@ -1,12 +1,13 @@
-
 from dataclasses import dataclass
 from queue import Queue, Empty
+from pathlib import Path
 from collections import deque
 from typing import Optional, Union
 import time
 import json
 import numpy as np
 import sounddevice as sd
+from scipy.io.wavfile import write as wav_write
 
 try:
     import torch
@@ -29,7 +30,7 @@ class AudioInterfaceConfig:
     use_vad: bool = True
     vad_threshold: float = 0.01
 
-    feature_type: str = "log_mel"
+    feature_type: str = "log_mel"   # "raw" or "log_mel"
     n_mels: int = 64
     n_fft: int = 400
     hop_length: int = 160
@@ -40,58 +41,38 @@ class AudioInterfaceConfig:
     emit_log_mel: bool = True
     emit_metadata: bool = True
 
+    save_debug_wav: bool = True
     model_input_shape: Optional[tuple] = None
-    output_format: str = "dict"
+    output_format: str = "dict"     # "dict" or "json"
 
 
 class AudioPackager:
-    def __init__(self, config: AudioInterfaceConfig):
-        self.cfg = config
-        self.queue = Queue()
-        self.buffer = deque()
-        self.current_block = np.zeros((0, self.cfg.channels), dtype=self.cfg.dtype)
-        self.max_samples = int(self.cfg.window_seconds * self.cfg.sample_rate)
-        self.hop_samples = max(1, int(self.max_samples * (1 - self.cfg.overlap_ratio)))
-        self.mel_transform = None
-        if self.cfg.feature_type == "log_mel" and torchaudio is not None:
-            self.mel_transform = torchaudio.transforms.MelSpectrogram(
-                sample_rate=self.cfg.sample_rate,
-                n_fft=self.cfg.n_fft,
-                hop_length=self.cfg.hop_length,
-                win_length=self.cfg.win_length,
-                n_mels=self.cfg.n_mels,
-            )
+    def __init__(self, config: AudioInterfaceConfig, model_path: Optional[str] = None):
+        # ... existing init code ...
+        
+        self.model = None
+        self.feature_extractor = None
+        if model_path:
+            self.load_model(model_path)
 
-    def _resample_if_needed(self, audio: np.ndarray, sr_in: int) -> np.ndarray:
-        if sr_in == self.cfg.sample_rate:
-            return audio
-        if torchaudio is None or torch is None:
-            raise RuntimeError("torchaudio and torch are required for resampling")
-        x = torch.tensor(audio.T, dtype=torch.float32)
-        y = torchaudio.functional.resample(x, sr_in, self.cfg.sample_rate)
-        return y.T.numpy()
-
-    def _normalize(self, audio: np.ndarray) -> np.ndarray:
-        if not self.cfg.normalize:
-            return audio
-        peak = np.max(np.abs(audio)) + 1e-8
-        return audio / peak
-
-    def _vad_keep(self, audio: np.ndarray) -> bool:
-        if not self.cfg.use_vad:
-            return True
-        energy = float(np.mean(audio ** 2))
-        return energy >= self.cfg.vad_threshold
-
-    def _log_mel(self, audio: np.ndarray):
-        if self.mel_transform is None:
-            raise RuntimeError("log-mel requires torchaudio")
-        x = torch.tensor(audio.T, dtype=torch.float32)
-        mel = self.mel_transform(x)
-        return torch.log(mel + 1e-6).numpy()
+    def load_model(self, model_path: str):
+        """Load fine-tuned Wav2Vec2 emotion model"""
+        from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2ForSequenceClassification
+        
+        self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(model_path)
+        self.model = Wav2Vec2ForSequenceClassification.from_pretrained(model_path)
+        self.model.eval()
+        
+        # Move to GPU if available
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(device)
+        self.device = device
+        print(f"Model loaded on {device}")
 
     def package_window(self, audio: np.ndarray, start_time: float, end_time: float) -> dict:
+        raw_audio = audio.copy()
         audio = self._normalize(audio)
+
         payload = {
             "start_time": start_time,
             "end_time": end_time,
@@ -102,47 +83,62 @@ class AudioPackager:
             "vad_keep": self._vad_keep(audio),
             "quality_flag": "ok",
         }
+
         if self.cfg.emit_raw_waveform:
             payload["waveform"] = audio
+
+        if self.cfg.save_debug_wav:
+            timestamp_ns = time.time_ns()
+            filename = f"audio_window_{timestamp_ns}.wav"
+            saved_path = self.save_window_to_wav(raw_audio, filename)
+            payload["saved_wav"] = str(saved_path)
+
+        # MODEL INFERENCE - only run if model is loaded and VAD passes
+        if self.model is not None and payload["vad_keep"]:
+            emotion_probs = self.run_emotion_inference(audio)
+            payload["emotion_probs"] = emotion_probs
+            payload["emotion_pred"] = emotion_probs.argmax().item()
+            payload["emotion_conf"] = float(emotion_probs.max())
+
         if self.cfg.emit_log_mel and self.cfg.feature_type == "log_mel":
             payload["log_mel"] = self._log_mel(audio)
-        if self.cfg.model_input_shape is not None:
-            payload["expected_input_shape"] = self.cfg.model_input_shape
+
         if not payload["vad_keep"]:
             payload["quality_flag"] = "silence_like"
+
         return payload
 
-    def format_output(self, payload: dict):
-        if self.cfg.output_format == "json":
-            serializable = {}
-            for k, v in payload.items():
-                if isinstance(v, np.ndarray):
-                    serializable[k] = v.tolist()
-                else:
-                    serializable[k] = v
-            return json.dumps(serializable)
-        return payload
-
-    def push_audio_block(self, block: np.ndarray):
-        if block.ndim == 1:
-            block = block[:, None]
-        self.current_block = np.vstack([self.current_block, block])
-
-    def pop_windows(self):
-        outputs = []
-        while len(self.current_block) >= self.max_samples:
-            window = self.current_block[:self.max_samples]
-            self.current_block = self.current_block[self.hop_samples:]
-            now = time.time()
-            payload = self.package_window(window, now - self.cfg.window_seconds, now)
-            outputs.append(self.format_output(payload))
-        return outputs
+    def run_emotion_inference(self, audio: np.ndarray) -> torch.Tensor:
+        """Run Wav2Vec2 model inference on audio window"""
+        # Convert to torch tensor and ensure correct shape
+        if audio.ndim == 2:
+            audio_mono = audio[:, 0]
+        else:
+            audio_mono = audio
+        
+        # Feature extraction matching training
+        inputs = self.feature_extractor(
+            audio_mono, 
+            sampling_rate=self.cfg.sample_rate,
+            return_tensors="pt",
+            padding=True
+        )
+        
+        # Move to model device
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+        
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            logits = outputs.logits
+            probs = torch.softmax(logits, dim=-1)
+        
+        return probs.cpu()
 
 
 class AudioStreamApp:
-    def __init__(self, config: AudioInterfaceConfig):
+    def __init__(self, config: AudioInterfaceConfig, model_path: Optional[str] = None):
         self.cfg = config
-        self.packager = AudioPackager(config)
+        self.packager = AudioPackager(config, model_path)  # Pass model path
         self.running = False
 
     def callback(self, indata, frames, time_info, status):
@@ -161,7 +157,7 @@ class AudioStreamApp:
             dtype=self.cfg.dtype,
             callback=self.callback,
         ):
-            print('Audio stream running. Press Ctrl+C to stop.')
+            print("Audio stream running. Press Ctrl+C to stop.")
             while self.running:
                 try:
                     item = self.packager.queue.get(timeout=0.5)
@@ -173,5 +169,16 @@ class AudioStreamApp:
 if __name__ == "__main__":
     cfg = AudioInterfaceConfig()
     app = AudioStreamApp(cfg)
-    for packet in app.run():
-        print(packet if isinstance(packet, str) else {k: (v.shape if isinstance(v, np.ndarray) else v) for k, v in packet.items()})
+
+    try:
+        for packet in app.run():
+            if isinstance(packet, str):
+                print(packet)
+            else:
+                summary = {
+                    k: (v.shape if isinstance(v, np.ndarray) else v)
+                    for k, v in packet.items()
+                }
+                print(summary)
+    except KeyboardInterrupt:
+        print("Stopped.")
