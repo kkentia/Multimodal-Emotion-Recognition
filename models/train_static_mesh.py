@@ -1,3 +1,4 @@
+#train_static_mesh.py
 # Epoch [100/100] | Val Acc: 54.08% probably bcz it struggles with 'digust' emotion
 # without disgust: Epoch [100/100] | Val Acc: 54.98% --> nope, that wasnt it.
 import os
@@ -7,6 +8,9 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_class_weight
+import numpy as np
+
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 CSV_PATH = os.path.join(REPO_ROOT, "data", "static_mesh_dataset.csv")
@@ -33,15 +37,17 @@ class StaticMLP(nn.Module): #nn.module is base class for all nn modules: ur mode
     def __init__(self, input_size, num_classes):
         super(StaticMLP, self).__init__()
         self.network = nn.Sequential( #it is a sequential container
-            nn.Linear(input_size, 64),
-            nn.BatchNorm1d(64), #normalise 2d and 3d data
+            nn.Linear(input_size, 128), #removed
+            #nn.BatchNorm1d(64), #normalise 2d and 3d data
+            nn.LayerNorm(128),
             nn.ReLU(), #non linear activation func
-            nn.Dropout(0.2), #regularization technique that randomly set 20% of input to 0 during training, preventing nodes from co-adapting
-            nn.Linear(64, 32), #input size is last output size
-            nn.BatchNorm1d(32),
+            nn.Dropout(0.3), #regularization technique that randomly set 20% of input to 0 during training, preventing nodes from co-adapting
+            nn.Linear(128, 64), #input size is last output size
+            #nn.BatchNorm1d(32), removed
+            nn.LayerNorm(64),
             nn.ReLU(),
-            nn.Dropout(p= 0.2), #p is probability of an elem to be zero'ed
-            nn.Linear(32, num_classes) #output is the number of features / labels we want to classify
+            nn.Dropout(p= 0.3), #p is probability of an elem to be zero'ed
+            nn.Linear(64, num_classes) #output is the number of features / labels we want to classify
         )
     def forward(self, x): return self.network(x)
 
@@ -58,7 +64,11 @@ if __name__ == '__main__':
     val_loader = DataLoader(StaticDataset(X_val, y_val), batch_size=BATCH_SIZE, shuffle=False)
 
     model = StaticMLP(INPUT_FEATURES, NUM_CLASSES)
-    criterion = nn.CrossEntropyLoss() #loss func
+    
+    class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(y), y=y)
+    weights_tensor = torch.tensor(class_weights, dtype=torch.float32)
+    
+    criterion = nn.CrossEntropyLoss(weight= weights_tensor) #loss func
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)  #optim from torch as well
     
     best_acc = 0.0

@@ -20,6 +20,7 @@ __pycache__/
 #datasets
 data/raw/
 data/processed/
+data/mesh_images/
 
 #weights
 models/saved_weights
