@@ -45,7 +45,3 @@ Thumbs.db
 *.tmp
 *.bak
 
-# Claude
-.claude
-.claude_files
-
