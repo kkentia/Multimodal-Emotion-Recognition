@@ -3,6 +3,8 @@ import numpy as np
 import socket
 import json
 import time
+import threading
+import os
 from collections import deque
 from enum import Enum
 
@@ -10,6 +12,7 @@ import torch
 import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
+import sounddevice as sd
 
 #configure for godot
 GODOT_HOST = "127.0.0.1"
@@ -24,10 +27,83 @@ WINDOW_NAME = "Emotion Spell Interface"
 # Path to the Resnet18 model
 MODEL_PATH = "resnet18_emotion.pth"
 
-#we need to check if these match with the emotions from the model 
+#we need to check if these match with the emotions from the model
 CLASS_NAMES = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
 
 USE_GRAYSCALE_MODEL = False
+
+# ── SER config ────────────────────────────────────────────────────────────────
+SER_SAMPLE_RATE   = 16000
+SER_AUDIO_SECONDS = 3  # rolling buffer length
+
+# maps Wav2Vec2 labels → game emotion names
+SER_LABEL_MAP = {
+    "angry":     "angry",
+    "fearful":   "fear",
+    "happy":     "happy",
+    "neutral":   "neutral",
+    "sad":       "sad",
+    "surprised": "surprise",
+    "calm":      "neutral",
+    "disgust":   "neutral",
+}
+
+def _find_ser_checkpoint():
+    """Auto-detect the latest trained SER checkpoint."""
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    if not os.path.isdir(results_dir):
+        return None
+    checkpoints = [
+        (int(e.split("-")[-1]), os.path.join(results_dir, e))
+        for e in os.listdir(results_dir)
+        if e.startswith("checkpoint-") and e.split("-")[-1].isdigit()
+    ]
+    return sorted(checkpoints)[-1][1] if checkpoints else None
+
+# rolling audio buffer filled by background thread
+_audio_buffer = np.zeros(SER_AUDIO_SECONDS * SER_SAMPLE_RATE, dtype=np.float32)
+_audio_lock   = threading.Lock()
+
+def _audio_callback(indata, frames, time_info, status):
+    global _audio_buffer
+    with _audio_lock:
+        _audio_buffer = np.roll(_audio_buffer, -frames)
+        _audio_buffer[-frames:] = indata[:, 0]
+
+def start_audio_stream():
+    stream = sd.InputStream(
+        samplerate=SER_SAMPLE_RATE,
+        channels=1,
+        dtype="float32",
+        callback=_audio_callback,
+    )
+    stream.start()
+    return stream
+
+class SERModel:
+    def __init__(self, checkpoint_path):
+        from transformers import Wav2Vec2ForSequenceClassification, Wav2Vec2FeatureExtractor
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.extractor = Wav2Vec2FeatureExtractor.from_pretrained(checkpoint_path)
+        self.model     = Wav2Vec2ForSequenceClassification.from_pretrained(checkpoint_path)
+        self.model.to(self.device)
+        self.model.eval()
+
+    def predict(self, audio: np.ndarray):
+        peak = np.max(np.abs(audio))
+        if peak > 0:
+            audio = audio / peak
+        inputs = self.extractor(
+            audio, sampling_rate=SER_SAMPLE_RATE,
+            return_tensors="pt", padding=True
+        )
+        with torch.no_grad():
+            logits = self.model(inputs.input_values.to(self.device)).logits
+            probs  = torch.softmax(logits, dim=1)
+            conf, idx = torch.max(probs, dim=1)
+        raw_label = self.model.config.id2label[idx.item()]
+        return SER_LABEL_MAP.get(raw_label, "neutral"), conf.item()
+# ──────────────────────────────────────────────────────────────────────────────
 
 #three modes for the prediction
 class Mode(Enum):
@@ -233,8 +309,12 @@ def put_footer(img, text):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.65, (220, 220, 220), 2)
     
 def fake_ser():
-    # TODO: replace with real SER output
     return ("angry", 0.78)
+
+def real_ser(ser_model: SERModel):
+    with _audio_lock:
+        audio = _audio_buffer.copy()
+    return ser_model.predict(audio)
 
 
 def late_fusion(fer, ser):
@@ -304,6 +384,20 @@ def main():
         print(f"[ERROR] Failed to load FER model: {e}")
         return
 
+    # Load SER model if checkpoint exists, else use fake_ser
+    ser_model    = None
+    audio_stream = None
+    checkpoint   = _find_ser_checkpoint()
+    if checkpoint:
+        try:
+            ser_model    = SERModel(checkpoint)
+            audio_stream = start_audio_stream()
+            print(f"[INFO] SER model loaded: {checkpoint}")
+        except Exception as e:
+            print(f"[WARN] SER load failed, using fake SER: {e}")
+    else:
+        print("[WARN] No SER checkpoint found, using fake SER")
+
     cap = open_camera()
     if cap is None:
         print("[ERROR] Could not open webcam.")
@@ -340,7 +434,7 @@ def main():
         face_label, face_conf, face_bbox = cached_fer
         fer = (face_label, face_conf)
 
-        ser = fake_ser()
+        ser = real_ser(ser_model) if ser_model else fake_ser()
         speech_label, speech_conf = ser
 
         fused_conf = late_fusion(fer, ser)
@@ -442,6 +536,8 @@ def main():
 
     udp_sock.close()
     cap.release()
+    if audio_stream:
+        audio_stream.stop()
     cv2.destroyAllWindows()
     print("[INFO] Clean exit.")
 
