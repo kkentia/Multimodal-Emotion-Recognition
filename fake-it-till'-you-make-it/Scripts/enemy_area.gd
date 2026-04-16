@@ -23,14 +23,16 @@ func take_dmg():
 	current_health -= 1
 	health_bar.value = current_health
 	hurt_sound.play()
-	
-	#add effects or sounds later here
-	#$Sprite2D.modulate =Color(1,0,0) 
-	#await get_tree().create_timer(0.2).timeout
-	#$Sprite2D.modulate=Color(1,1,1) #normal color
-	
+	_flash_red()
 	if current_health <= 0:
 		die()
+
+func _flash_red():
+	var sprite = $enemy_sprite
+	sprite.modulate = Color(1, 0, 0)
+	await get_tree().create_timer(0.2).timeout
+	if is_instance_valid(sprite):
+		sprite.modulate = Color(1, 1, 1)
 		
 		
 		

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b8cqfcc1cwkm1"]
 
 [ext_resource type="Script" uid="uid://csh30kvvpcr20" path="res://Scripts/enemy_area.gd" id="1_tocsi"]
-[ext_resource type="Texture2D" uid="uid://bi1nu3nms4lkb" path="res://Assets/Sprites/enemy2.png" id="2_tocsi"]
+[ext_resource type="Texture2D" uid="uid://ddpp7vgwe8bad" path="res://Assets/Sprites/3d-character-virus-bacteria-green-600nw-2619491119.webp" id="2_tocsi"]
 [ext_resource type="AudioStream" uid="uid://wc2fsammkibe" path="res://Assets/Audio/assets_audio_death_sound.wav" id="3_x66a6"]
 
 [sub_resource type="GDScript" id="GDScript_fne5p"]

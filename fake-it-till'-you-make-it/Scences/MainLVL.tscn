@@ -41,6 +41,16 @@ theme_override_fonts/font = ExtResource("7_2r8x1")
 theme_override_font_sizes/font_size = 50
 text = "YOU WON! "
 
+[node name="spell_label" type="Label" parent="." unique_id=1023757551]
+offset_left = 380.0
+offset_top = 280.0
+offset_right = 780.0
+offset_bottom = 360.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("7_2r8x1")
+theme_override_font_sizes/font_size = 40
+text = ""
+
 [node name="game_over" type="Label" parent="." unique_id=1023757550]
 offset_left = 400.0
 offset_top = 139.0

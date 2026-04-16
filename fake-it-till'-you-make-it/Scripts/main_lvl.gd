@@ -8,6 +8,7 @@ const CONFIDENCE_THRESHOLD = 0.0
 @onready var audio_stream = $AudioStreamPlayer2D
 @onready var you_won_label = $you_won
 @onready var game_over_label = $game_over
+@onready var spell_label = $spell_label
 
 var active_enemy = null
 
@@ -20,6 +21,7 @@ var defeated_enemies  = 0
 func _ready() -> void:
 	you_won_label.visible = false
 	game_over_label.visible = false
+	spell_label.visible = false
 	enemy2.visible = false
 	ui.update_player_health(player_current_health)
 	enemy.get_node("enemy_area").enemy_died.connect(_on_enemy_died)
@@ -53,16 +55,23 @@ func process_ai_input(spoken_word: String, fer_emotion: String, fer_prob: float,
 	elif spoken_word == "drain" and fer_emotion == "sad" and ser_emotion == "sad":
 		cast_spell("ShadowDrain")
 		
+func show_spell_label(text: String):
+	spell_label.text = text
+	spell_label.visible = true
+	await get_tree().create_timer(1.5).timeout
+	spell_label.visible = false
+
 func cast_spell(spell_name: String):
 	print("Successfully cast: ", spell_name)
 
 	if spell_name == "Fireball":
+		show_spell_label("Fireball!")
 		if is_instance_valid(active_enemy):
 			active_enemy.get_node("enemy_area").take_dmg()
 
 	elif spell_name == "Confusion":
+		show_spell_label("Confusion!")
 		if is_instance_valid(active_enemy):
-			# stun the enemy: freeze it for 2 seconds by disabling its area
 			var area = active_enemy.get_node("enemy_area")
 			area.set_process(false)
 			await get_tree().create_timer(2.0).timeout
@@ -70,13 +79,14 @@ func cast_spell(spell_name: String):
 				area.set_process(true)
 
 	elif spell_name == "Healing":
+		show_spell_label("Healing!")
 		player_current_health += 20
 		if player_current_health > player_max_health:
 			player_current_health = player_max_health
 		ui.update_player_health(player_current_health)
 
 	elif spell_name == "IceShard":
-		# stun + 1 damage
+		show_spell_label("Ice Shard!")
 		if is_instance_valid(active_enemy):
 			var area = active_enemy.get_node("enemy_area")
 			area.take_dmg()
@@ -86,14 +96,14 @@ func cast_spell(spell_name: String):
 				area.set_process(true)
 
 	elif spell_name == "Lightning":
-		# hits twice
+		show_spell_label("Lightning!")
 		if is_instance_valid(active_enemy):
 			var area = active_enemy.get_node("enemy_area")
 			area.take_dmg()
 			area.take_dmg()
 
 	elif spell_name == "ShadowDrain":
-		# 1 damage to enemy + 10 HP back to player
+		show_spell_label("Shadow Drain!")
 		if is_instance_valid(active_enemy):
 			active_enemy.get_node("enemy_area").take_dmg()
 		player_current_health += 10
