@@ -601,10 +601,14 @@ def main():
                 cv2.LINE_AA
             )
 
-        # 5) Build UI
+        TARGET_W = 800
+        h_orig, w_orig = frame.shape[:2]
+        scale = TARGET_W / w_orig
+        frame = cv2.resize(frame, (TARGET_W, int(h_orig * scale)))
+
         h, w = frame.shape[:2]
-        panel_w = 420
-        canvas_h = h
+        panel_w = 320
+        canvas_h = max(h, 720)
 
         canvas = np.zeros((canvas_h, w + panel_w, 3), dtype=np.uint8)
         canvas[:, :] = (30, 30, 30)
