@@ -80,8 +80,12 @@ offset_right = 457.0
 offset_bottom = 130.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
-text = "- Fireball: shout \"Ignite\" --> Face: Angry >70% | Voice: Angry >70%
-- Confusion:  say\"Baffle\" --> Face: Happy >70% | Voice: Angry >70%"
+text = "- Fireball:     say 'Ignite'  --> Face: Angry   | Voice: Angry
+- Confusion:    say 'Baffle'  --> Face: Happy   | Voice: Angry
+- Healing:      say 'Restore' --> Face: Happy   | Voice: Happy
+- Ice Shard:    say 'Freeze'  --> Face: Sad     | Voice: Fear
+- Lightning:    say 'Strike'  --> Face: Surprise | Voice: Angry
+- Shadow Drain: say 'Drain'   --> Face: Sad     | Voice: Sad"
 
 [node name="openTutorial" type="Button" parent="OpenedBook" unique_id=1902091896]
 layout_mode = 0
@@ -114,10 +118,14 @@ offset_right = 638.0
 offset_bottom = 181.0
 theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
-text = "Fake your emotions to cast spells! 
+text = "Fake your emotions to cast spells!
 
-Example:
-Fireball = Angry Face + Angry Voice + Say 'Ignite'."
+Fireball:     Angry Face + Angry Voice + Say 'Ignite'
+Confusion:    Happy Face + Angry Voice + Say 'Baffle'
+Healing:      Happy Face + Happy Voice + Say 'Restore'
+Ice Shard:    Sad Face + Fearful Voice + Say 'Freeze'
+Lightning:    Surprised Face + Angry Voice + Say 'Strike'
+Shadow Drain: Sad Face + Sad Voice + Say 'Drain'"
 
 [node name="CloseBtn" type="Button" parent="tutorial/TextureRect" unique_id=770232922]
 layout_mode = 0

@@ -72,8 +72,8 @@ func _process(_delta: float) -> void:  # fix the warning too
 	
 func update_ai_text(spell: String, fer_emo: String, fer_prob: float, ser_emo: String, ser_prob: float):
 	text_label.text = "Spell: " + str(spell)
-	fer_label.text = "Face: " + fer_emo + " " + str(int(fer_prob * 100)) + "%"
-	ser_label.text = "Voice: " + ser_emo + " " + str(int(ser_prob * 100)) + "%"
+	fer_label.text = "Face: " + fer_emo.capitalize() + " " + str(int(fer_prob * 100)) + "%"
+	ser_label.text = "Voice: " + ser_emo.capitalize() + " " + str(int(ser_prob * 100)) + "%"
 
 
 
