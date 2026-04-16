@@ -1,12 +1,13 @@
 extends Node2D
 
-const CONFIDENCE_THRESHOLD = 0.7
+const CONFIDENCE_THRESHOLD = 0.0
 
 @onready var ui = $UI
 @onready var enemy = $Enemy
 @onready var enemy2 = $Enemy2
 @onready var audio_stream = $AudioStreamPlayer2D
 @onready var you_won_label = $you_won
+@onready var game_over_label = $game_over
 
 var active_enemy = null
 
@@ -17,10 +18,12 @@ var player_current_health: int = 100
 var defeated_enemies  = 0
 
 func _ready() -> void:
-	you_won_label.visible=false
+	you_won_label.visible = false
+	game_over_label.visible = false
 	enemy2.visible = false
 	ui.update_player_health(player_current_health)
 	enemy.get_node("enemy_area").enemy_died.connect(_on_enemy_died)
+	enemy.get_node("enemy_area").enemy_attacked.connect(_on_enemy_attacked)
 	active_enemy = enemy
 
 func process_ai_input(spoken_word: String, fer_emotion: String, fer_prob: float, ser_emotion: String, ser_prob: float):
@@ -110,10 +113,19 @@ func _on_enemy_died():
 	if defeated_enemies == 1:
 		enemy2.visible = true
 		enemy2.get_node("enemy_area").enemy_died.connect(_on_enemy_died)
+		enemy2.get_node("enemy_area").enemy_attacked.connect(_on_enemy_attacked)
 		active_enemy = enemy2
 	win()
 
 	
+func _on_enemy_attacked():
+	player_current_health -= 5
+	if player_current_health < 0:
+		player_current_health = 0
+	ui.update_player_health(player_current_health)
+	if player_current_health <= 0:
+		game_over_label.visible = true
+
 func win():
-	if defeated_enemies == 2: #change to many after
-		you_won_label.visible =true
+	if defeated_enemies == 2:
+		you_won_label.visible = true

@@ -7,11 +7,17 @@ var current_health: int = 5
 @onready var hurt_sound = $"../AudioStreamPlayer2D"
 
 
-signal enemy_died # to broadcast to main for defeated_enemies
+signal enemy_died
+signal enemy_attacked
 
 func _ready():
-	health_bar.max_value =max_health
+	health_bar.max_value = max_health
 	health_bar.value = current_health
+	var timer = Timer.new()
+	timer.wait_time = 3.0
+	timer.autostart = true
+	timer.timeout.connect(_on_attack_timer)
+	add_child(timer)
 
 func take_dmg():
 	current_health -= 1
@@ -29,11 +35,12 @@ func take_dmg():
 		
 		
 func die():
-	print("Enemy Defeated")
-	enemy_died.emit() #announce it to main to count nb of defeated enemies
-	queue_free() #deletes the enemy from the gamee
+	enemy_died.emit()
+	queue_free()
 
-#testing damage manually onclick
+func _on_attack_timer():
+	enemy_attacked.emit()
+
 func _input_event(viewport, event, shape_idx):
 	if event is InputEventMouseButton and event.pressed:
 		take_dmg()

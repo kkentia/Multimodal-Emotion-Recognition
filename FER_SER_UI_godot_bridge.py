@@ -20,7 +20,7 @@ GODOT_PORT = 4242
 
 SEND_INTERVAL = 1.0          # minimum sec between sends
 STABLE_REQUIRED_FRAMES = 15  # how long it must stay the same before sending frames
-CONF_THRESHOLD = 0.60 
+CONF_THRESHOLD = 0.0
 
 WINDOW_NAME = "Emotion Spell Interface"
 
