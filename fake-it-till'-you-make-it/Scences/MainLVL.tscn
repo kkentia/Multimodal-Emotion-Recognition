@@ -13,17 +13,17 @@
 script = ExtResource("1_y8r8y")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=2124034026]
-position = Vector2(574.24994, 324.25)
-scale = Vector2(0.4862288, 0.39603657)
+position = Vector2(640, 360)
+scale = Vector2(1.084, 0.882)
 texture = ExtResource("2_n0bbk")
 
 [node name="Enemy" parent="." unique_id=450527774 instance=ExtResource("2_er1sx")]
-position = Vector2(558, 426)
+position = Vector2(640, 426)
 scale = Vector2(0.39, 0.39)
 
 [node name="foreground" type="Sprite2D" parent="." unique_id=1471897837]
-position = Vector2(575.50006, 322.5)
-scale = Vector2(0.48601696, 0.3945122)
+position = Vector2(640, 360)
+scale = Vector2(1.084, 0.882)
 texture = ExtResource("3_1dgwv")
 
 [node name="UI" parent="." unique_id=1263911513 instance=ExtResource("5_otse2")]
@@ -62,11 +62,11 @@ theme_override_font_sizes/font_size = 50
 text = "GAME OVER!"
 
 [node name="Enemy2" parent="." unique_id=423189580 instance=ExtResource("8_yfbnl")]
-position = Vector2(560, 424.99997)
+position = Vector2(640, 426)
 scale = Vector2(0.39, 0.39)
 
 [node name="Enemy3" parent="." unique_id=423189581 instance=ExtResource("8_yfbnl")]
-position = Vector2(560, 424.99997)
+position = Vector2(640, 426)
 scale = Vector2(0.39, 0.39)
 
 [connection signal="finished" from="AudioStreamPlayer2D" to="." method="_on_audio_stream_player_2d_finished"]
