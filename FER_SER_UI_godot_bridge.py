@@ -39,30 +39,12 @@ CLASS_NAMES = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
 
 USE_GRAYSCALE_MODEL = False
 
-# ── Whisper config ────────────────────────────────────────────────────────────
+# Whisper config 
 WHISPER_MODEL_SIZE   = "base"   # "tiny" | "base" | "small" | "medium" | "large"
 WHISPER_INTERVAL     = 3.0      # seconds between transcription runs
 WHISPER_LANGUAGE     = "en"     # set to None for auto-detect
-USE_WHISPER_EMOTION  = True     # blend keyword-detected emotion into SER result
 
-# Maps spoken keywords -> emotion label (used when USE_WHISPER_EMOTION is True)
-WHISPER_EMOTION_KEYWORDS = {
-    "happy":    ["happy", "great", "wonderful", "love", "amazing", "joy", "excited", "yay"],
-    "angry":    ["angry", "hate", "annoying", "frustrating", "mad", "furious", "stop"],
-    "sad":      ["sad", "cry", "miss", "lonely", "hurt", "depressed", "sorry"],
-    "fear":     ["scared", "afraid", "fear", "terrified", "nervous", "anxious", "help"],
-    "surprise": ["wow", "whoa", "incredible", "unbelievable", "shocking", "really"],
-}
-
-def emotion_from_transcript(text: str):
-    """Return (emotion, 0.7) if any keyword found in text, else None."""
-    text_lower = text.lower()
-    for emotion, keywords in WHISPER_EMOTION_KEYWORDS.items():
-        if any(kw in text_lower for kw in keywords):
-            return emotion, 0.7
-    return None
-
-# ── SER config ────────────────────────────────────────────────────────────────
+# SER config 
 SER_SAMPLE_RATE   = 16000
 SER_AUDIO_SECONDS = 3  # rolling buffer length
 
@@ -133,9 +115,9 @@ class SERModel:
             conf, idx = torch.max(probs, dim=1)
         raw_label = self.model.config.id2label[idx.item()]
         return SER_LABEL_MAP.get(raw_label, "neutral"), conf.item()
-# ──────────────────────────────────────────────────────────────────────────────
+#
 
-# ── Whisper transcription ─────────────────────────────────────────────────────
+# Whisper transcription
 _whisper_transcript = ""
 _whisper_lock       = threading.Lock()
 
@@ -181,7 +163,7 @@ class WhisperTranscriber:
 def get_whisper_transcript() -> str:
     with _whisper_lock:
         return _whisper_transcript
-# ──────────────────────────────────────────────────────────────────────────────
+#
 
 #three modes for the prediction
 class Mode(Enum):
@@ -189,17 +171,27 @@ class Mode(Enum):
     SER_ONLY = 2
     FUSED = 3
 
-#example for spells we could include
+# Spells must match Godot's main_lvl.gd exactly:
+# spoken_word AND fer_emotion AND ser_emotion -> spell name
 SPELLS = {
-    ("happy", "angry"): "fire_orb",
-    ("sad", "fear"): "ice_wall",
-    ("surprise", "happy"): "light_burst",
-    ("neutral", "angry"): "shadow_push",
-    ("happy", "happy"): "healing_wave",
-    ("angry", "angry"): "thunder_strike",
-    ("sad", "sad"): "mist_shield",
-    ("neutral", "neutral"): "idle_aura",
+    ("ignite",  "angry",    "angry"): "Fireball",
+    ("baffle",  "happy",    "angry"): "Confusion",
+    ("restore", "happy",    "happy"): "Healing",
+    ("freeze",  "sad",      "fear"):  "IceShard",
+    ("strike",  "surprise", "angry"): "Lightning",
+    ("drain",   "sad",      "sad"):   "ShadowDrain",
 }
+
+# The trigger word the player must say for each spell
+SPELL_KEYWORDS = {"ignite", "baffle", "restore", "freeze", "strike", "drain"}
+
+def extract_spoken_word(transcript: str) -> str:
+    """Return the first spell keyword found in the transcript, or empty string."""
+    text_lower = transcript.lower()
+    for word in SPELL_KEYWORDS:
+        if word in text_lower:
+            return word
+    return ""
 
 #resnet model
 class ResNetFER:
@@ -412,6 +404,9 @@ def draw_transcript_panel(img, x1, y1, x2, y2, transcript: str):
         cv2.putText(img, line, (x1 + 18, y1 + 65 + i * 22),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.55, (180, 220, 255), 1, cv2.LINE_AA)
     
+def fake_fer():
+    return ("neutral", 0.75, None)
+
 def fake_ser():
     return ("angry", 0.78)
 
@@ -430,21 +425,21 @@ def late_fusion(fer, ser):
     return fused_conf
 
 
-def get_spell(face_label, speech_label):
-    if face_label.lower() == "unknown":
+def get_spell(spoken_word, face_label, speech_label):
+    if face_label.lower() == "unknown" or not spoken_word:
         return None
-    return SPELLS.get((face_label.lower(), speech_label.lower()), None)
+    return SPELLS.get((spoken_word.lower(), face_label.lower(), speech_label.lower()), None)
 
 
-def build_payload(face, fer_conf, speech, ser_conf, fused_conf, spell):
+def build_payload(face, fer_conf, speech, ser_conf, fused_conf, spoken_word, spell):
     return {
         "face_emotion": face,
         "face_confidence": round(float(fer_conf), 3),
         "speech_emotion": speech,
         "speech_confidence": round(float(ser_conf), 3),
         "fused_confidence": round(float(fused_conf), 3),
-        "spell_key": f"{face}_{speech}",
-        "spell": spell,
+        "spoken_word": spoken_word,
+        "spell": spell if spell else "",
         "timestamp": time.time()
     }
 
@@ -476,6 +471,7 @@ def main():
     print("[INFO] Starting interface...")
 
     # Load FER model
+    fer_model = None
     try:
         fer_model = ResNetFER(
             model_path=MODEL_PATH,
@@ -485,8 +481,7 @@ def main():
         print(f"[INFO] FER model loaded from: {MODEL_PATH}")
         print(f"[INFO] Running on device: {fer_model.device}")
     except Exception as e:
-        print(f"[ERROR] Failed to load FER model: {e}")
-        return
+        print(f"[WARN] FER model not found, using fake FER: {e}")
 
     # Load SER model if checkpoint exists, else use fake_ser
     ser_model    = None
@@ -546,7 +541,7 @@ def main():
 
         # Run FER every frame. Change to % 2 or % 3 if you want more speed.
         if frame_count % 1 == 0:
-            cached_fer = fer_model.predict(frame)
+            cached_fer = fer_model.predict(frame) if fer_model else fake_fer()
 
         face_label, face_conf, face_bbox = cached_fer
         fer = (face_label, face_conf)
@@ -554,18 +549,15 @@ def main():
         ser = real_ser(ser_model) if ser_model else fake_ser()
         speech_label, speech_conf = ser
 
-        # If Whisper detected a keyword emotion, let it override the SER label
-        transcript = get_whisper_transcript()
-        if USE_WHISPER_EMOTION and transcript:
-            kw_result = emotion_from_transcript(transcript)
-            if kw_result is not None:
-                speech_label, speech_conf = kw_result
+        # Get Whisper transcript and extract spoken keyword
+        transcript   = get_whisper_transcript()
+        spoken_word  = extract_spoken_word(transcript)
 
         fused_conf = late_fusion(fer, ser)
 
-        # 2) Build spell combo
-        combo = (face_label, speech_label)
-        spell = get_spell(face_label, speech_label)
+        # 2) Build spell combo (spoken word + face + speech must all match)
+        combo = (spoken_word, face_label, speech_label)
+        spell = get_spell(spoken_word, face_label, speech_label)
 
         # 3) Stability check
         if combo == last_combo:
@@ -586,7 +578,7 @@ def main():
             payload = build_payload(
                 face_label, face_conf,
                 speech_label, speech_conf,
-                fused_conf, spell
+                fused_conf, spoken_word, spell
             )
             send_to_godot_udp(udp_sock, payload)
             last_sent_time = now
