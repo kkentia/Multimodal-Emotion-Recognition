@@ -65,4 +65,8 @@ text = "GAME OVER!"
 position = Vector2(560, 424.99997)
 scale = Vector2(0.39, 0.39)
 
+[node name="Enemy3" parent="." unique_id=423189581 instance=ExtResource("8_yfbnl")]
+position = Vector2(560, 424.99997)
+scale = Vector2(0.39, 0.39)
+
 [connection signal="finished" from="AudioStreamPlayer2D" to="." method="_on_audio_stream_player_2d_finished"]

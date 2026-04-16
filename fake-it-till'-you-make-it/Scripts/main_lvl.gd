@@ -5,6 +5,7 @@ const CONFIDENCE_THRESHOLD = 0.0
 @onready var ui = $UI
 @onready var enemy = $Enemy
 @onready var enemy2 = $Enemy2
+@onready var enemy3 = $Enemy3
 @onready var audio_stream = $AudioStreamPlayer2D
 @onready var you_won_label = $you_won
 @onready var game_over_label = $game_over
@@ -23,6 +24,7 @@ func _ready() -> void:
 	game_over_label.visible = false
 	spell_label.visible = false
 	enemy2.visible = false
+	enemy3.visible = false
 	ui.update_player_health(player_current_health)
 	enemy.get_node("enemy_area").enemy_died.connect(_on_enemy_died)
 	enemy.get_node("enemy_area").enemy_attacked.connect(_on_enemy_attacked)
@@ -125,6 +127,11 @@ func _on_enemy_died():
 		enemy2.get_node("enemy_area").enemy_died.connect(_on_enemy_died)
 		enemy2.get_node("enemy_area").enemy_attacked.connect(_on_enemy_attacked)
 		active_enemy = enemy2
+	elif defeated_enemies == 2:
+		enemy3.visible = true
+		enemy3.get_node("enemy_area").enemy_died.connect(_on_enemy_died)
+		enemy3.get_node("enemy_area").enemy_attacked.connect(_on_enemy_attacked)
+		active_enemy = enemy3
 	win()
 
 	
@@ -137,5 +144,5 @@ func _on_enemy_attacked():
 		game_over_label.visible = true
 
 func win():
-	if defeated_enemies == 2:
+	if defeated_enemies == 3:
 		you_won_label.visible = true
