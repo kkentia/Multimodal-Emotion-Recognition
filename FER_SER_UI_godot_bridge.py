@@ -14,6 +14,13 @@ from torchvision import models, transforms
 from PIL import Image
 import sounddevice as sd
 
+try:
+    from faster_whisper import WhisperModel as _FasterWhisperModel
+    WHISPER_AVAILABLE = True
+except ImportError:
+    WHISPER_AVAILABLE = False
+    print("[WARN] faster-whisper not installed. Transcription disabled. Run: pip install faster-whisper")
+
 #configure for godot
 GODOT_HOST = "127.0.0.1"
 GODOT_PORT = 4242
@@ -31,6 +38,29 @@ MODEL_PATH = "resnet18_emotion.pth"
 CLASS_NAMES = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
 
 USE_GRAYSCALE_MODEL = False
+
+# ── Whisper config ────────────────────────────────────────────────────────────
+WHISPER_MODEL_SIZE   = "base"   # "tiny" | "base" | "small" | "medium" | "large"
+WHISPER_INTERVAL     = 3.0      # seconds between transcription runs
+WHISPER_LANGUAGE     = "en"     # set to None for auto-detect
+USE_WHISPER_EMOTION  = True     # blend keyword-detected emotion into SER result
+
+# Maps spoken keywords -> emotion label (used when USE_WHISPER_EMOTION is True)
+WHISPER_EMOTION_KEYWORDS = {
+    "happy":    ["happy", "great", "wonderful", "love", "amazing", "joy", "excited", "yay"],
+    "angry":    ["angry", "hate", "annoying", "frustrating", "mad", "furious", "stop"],
+    "sad":      ["sad", "cry", "miss", "lonely", "hurt", "depressed", "sorry"],
+    "fear":     ["scared", "afraid", "fear", "terrified", "nervous", "anxious", "help"],
+    "surprise": ["wow", "whoa", "incredible", "unbelievable", "shocking", "really"],
+}
+
+def emotion_from_transcript(text: str):
+    """Return (emotion, 0.7) if any keyword found in text, else None."""
+    text_lower = text.lower()
+    for emotion, keywords in WHISPER_EMOTION_KEYWORDS.items():
+        if any(kw in text_lower for kw in keywords):
+            return emotion, 0.7
+    return None
 
 # ── SER config ────────────────────────────────────────────────────────────────
 SER_SAMPLE_RATE   = 16000
@@ -103,6 +133,54 @@ class SERModel:
             conf, idx = torch.max(probs, dim=1)
         raw_label = self.model.config.id2label[idx.item()]
         return SER_LABEL_MAP.get(raw_label, "neutral"), conf.item()
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── Whisper transcription ─────────────────────────────────────────────────────
+_whisper_transcript = ""
+_whisper_lock       = threading.Lock()
+
+class WhisperTranscriber:
+    """Runs Whisper in a background thread on the rolling audio buffer."""
+
+    def __init__(self, model_size: str = WHISPER_MODEL_SIZE):
+        print(f"[INFO] Loading faster-whisper model '{model_size}'...")
+        device  = "cuda" if torch.cuda.is_available() else "cpu"
+        compute = "float16" if device == "cuda" else "int8"
+        self._model   = _FasterWhisperModel(model_size, device=device, compute_type=compute)
+        self._running = False
+        self._thread  = None
+        print("[INFO] Whisper model ready.")
+
+    def _loop(self):
+        global _whisper_transcript
+        while self._running:
+            with _audio_lock:
+                audio = _audio_buffer.copy()
+
+            # faster-whisper expects float32 at 16 kHz — matches our audio buffer exactly
+            segments, _ = self._model.transcribe(
+                audio,
+                language=WHISPER_LANGUAGE,
+                beam_size=5,
+            )
+            text = " ".join(seg.text for seg in segments).strip()
+
+            with _whisper_lock:
+                _whisper_transcript = text
+
+            time.sleep(WHISPER_INTERVAL)
+
+    def start(self):
+        self._running = True
+        self._thread  = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+
+def get_whisper_transcript() -> str:
+    with _whisper_lock:
+        return _whisper_transcript
 # ──────────────────────────────────────────────────────────────────────────────
 
 #three modes for the prediction
@@ -307,6 +385,32 @@ def put_footer(img, text):
     h, w = img.shape[:2]
     cv2.putText(img, text, (20, h - 20),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.65, (220, 220, 220), 2)
+
+def draw_transcript_panel(img, x1, y1, x2, y2, transcript: str):
+    """Renders the Whisper speech-to-text transcript in the side panel."""
+    cv2.rectangle(img, (x1, y1), (x2, y2), (35, 36, 48), -1)
+    cv2.rectangle(img, (x1, y1), (x2, y2), (70, 72, 90), 1)
+    cv2.rectangle(img, (x1, y1), (x1 + 8, y2), (100, 200, 255), -1)
+
+    cv2.putText(img, "Whisper Transcript", (x1 + 18, y1 + 28),
+                cv2.FONT_HERSHEY_DUPLEX, 0.72, (245, 245, 250), 1, cv2.LINE_AA)
+    cv2.line(img, (x1 + 16, y1 + 40), (x2 - 16, y1 + 40), (70, 72, 90), 1)
+
+    # Word-wrap the transcript to fit panel width (~28 chars per line)
+    words      = transcript.split() if transcript else ["..."]
+    lines, cur = [], ""
+    for word in words:
+        if len(cur) + len(word) + 1 > 28:
+            lines.append(cur)
+            cur = word
+        else:
+            cur = (cur + " " + word).strip()
+    if cur:
+        lines.append(cur)
+
+    for i, line in enumerate(lines[:3]):   # max 3 lines
+        cv2.putText(img, line, (x1 + 18, y1 + 65 + i * 22),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (180, 220, 255), 1, cv2.LINE_AA)
     
 def fake_ser():
     return ("angry", 0.78)
@@ -398,6 +502,19 @@ def main():
     else:
         print("[WARN] No SER checkpoint found, using fake SER")
 
+    # Load Whisper transcriber (requires audio stream to be running)
+    whisper_transcriber = None
+    if WHISPER_AVAILABLE:
+        if audio_stream is None:
+            # Whisper still needs the audio stream even if SER is fake
+            audio_stream = start_audio_stream()
+        try:
+            whisper_transcriber = WhisperTranscriber(WHISPER_MODEL_SIZE)
+            whisper_transcriber.start()
+            print("[INFO] Whisper transcription started.")
+        except Exception as e:
+            print(f"[WARN] Whisper failed to start: {e}")
+
     cap = open_camera()
     if cap is None:
         print("[ERROR] Could not open webcam.")
@@ -436,6 +553,13 @@ def main():
 
         ser = real_ser(ser_model) if ser_model else fake_ser()
         speech_label, speech_conf = ser
+
+        # If Whisper detected a keyword emotion, let it override the SER label
+        transcript = get_whisper_transcript()
+        if USE_WHISPER_EMOTION and transcript:
+            kw_result = emotion_from_transcript(transcript)
+            if kw_result is not None:
+                speech_label, speech_conf = kw_result
 
         fused_conf = late_fusion(fer, ser)
 
@@ -519,7 +643,10 @@ def main():
         draw_card(canvas, px1, 290, px2, 410, "FUSED", fused_label, fused_conf, (255, 170, 60))
 
         draw_spell_panel(canvas, px1, 425, px2, 575, face_label, speech_label, spell, ready)
-        draw_history(canvas, px1, 610, history)
+        draw_history(canvas, px1, 615, history)
+
+        if whisper_transcriber is not None:
+            draw_transcript_panel(canvas, px1, canvas_h - 140, px2, canvas_h - 10, transcript)
 
         cv2.imshow(WINDOW_NAME, canvas)
 
@@ -536,6 +663,8 @@ def main():
 
     udp_sock.close()
     cap.release()
+    if whisper_transcriber:
+        whisper_transcriber.stop()
     if audio_stream:
         audio_stream.stop()
     cv2.destroyAllWindows()
