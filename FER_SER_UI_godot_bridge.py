@@ -13,6 +13,9 @@ import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
 import sounddevice as sd
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
 try:
     from faster_whisper import WhisperModel as _FasterWhisperModel
@@ -31,13 +34,10 @@ CONF_THRESHOLD = 0.0
 
 WINDOW_NAME = "Emotion Spell Interface"
 
-# Path to the Resnet18 model
-MODEL_PATH = "resnet18_emotion.pth"
+MODEL_PATH = "best_squeezenet_mesh_full_5_actors_split.pth"
+TASK_PATH  = "models/face_landmarker.task"
 
-#we need to check if these match with the emotions from the model
-CLASS_NAMES = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
-
-USE_GRAYSCALE_MODEL = False
+CLASS_NAMES = ["angry", "fear", "happy", "sad"]
 
 # Whisper config 
 WHISPER_MODEL_SIZE   = "base"   # "tiny" | "base" | "small" | "medium" | "large"
@@ -53,11 +53,11 @@ SER_LABEL_MAP = {
     "angry":     "angry",
     "fearful":   "fear",
     "happy":     "happy",
-    "neutral":   "neutral",
+    "neutral":   "sad",
     "sad":       "sad",
-    "surprised": "surprise",
-    "calm":      "neutral",
-    "disgust":   "neutral",
+    "surprised": "happy",
+    "calm":      "sad",
+    "disgust":   "angry",
 }
 
 def _find_ser_checkpoint():
@@ -174,12 +174,11 @@ class Mode(Enum):
 # Spells must match Godot's main_lvl.gd exactly:
 # spoken_word AND fer_emotion AND ser_emotion -> spell name
 SPELLS = {
-    ("ignite",  "angry",    "angry"): "Fireball",
-    ("baffle",  "happy",    "angry"): "Confusion",
-    ("restore", "happy",    "happy"): "Healing",
-    ("freeze",  "sad",      "fear"):  "IceShard",
-    ("strike",  "surprise", "angry"): "Lightning",
-    ("drain",   "sad",      "sad"):   "ShadowDrain",
+    ("ignite",  "angry", "angry"): "Fireball",
+    ("baffle",  "happy", "angry"): "Confusion",
+    ("restore", "happy", "happy"): "Healing",
+    ("freeze",  "sad",   "fear"):  "IceShard",
+    ("drain",   "sad",   "sad"):   "ShadowDrain",
 }
 
 # The trigger word the player must say for each spell
@@ -193,101 +192,60 @@ def extract_spoken_word(transcript: str) -> str:
             return word
     return ""
 
-#resnet model
-class ResNetFER:
-    def __init__(self, model_path, class_names, use_grayscale=False, device=None):
+class SqueezeNetFER:
+    def __init__(self, model_path, class_names, task_path, device=None):
         self.class_names = class_names
-        self.use_grayscale = use_grayscale
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.model = models.resnet18(weights=None)
-
-        # If model was trained on single-channel images we can uncomment this behavior
-        if self.use_grayscale:
-            self.model.conv1 = nn.Conv2d(
-                1, 64, kernel_size=7, stride=2, padding=3, bias=False
-            )
-
-        num_features = self.model.fc.in_features
-        self.model.fc = nn.Linear(num_features, len(class_names))
-
-        state = torch.load(model_path, map_location=self.device)
-        self.model.load_state_dict(state)
+        self.model = models.squeezenet1_1(weights=None)
+        self.model.classifier[1] = nn.Conv2d(512, len(class_names), kernel_size=(1, 1), stride=(1, 1))
+        self.model.load_state_dict(torch.load(model_path, map_location=self.device, weights_only=True))
         self.model.to(self.device)
         self.model.eval()
 
-        self.face_detector = cv2.CascadeClassifier(
-            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+
+        base_options = python.BaseOptions(model_asset_path=task_path)
+        self.detector = vision.FaceLandmarker.create_from_options(
+            vision.FaceLandmarkerOptions(base_options=base_options, num_faces=1)
         )
-
-        
-        #this section must match how the model was trained
-        if self.use_grayscale:
-            self.transform = transforms.Compose([
-                transforms.Grayscale(num_output_channels=1),
-                transforms.Resize((224, 224)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5], std=[0.5])
-            ])
-        else:
-            self.transform = transforms.Compose([
-                transforms.Resize((224, 224)),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225]
-                )
-            ])
-
-    def detect_face(self, frame):
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        faces = self.face_detector.detectMultiScale(
-            gray,
-            scaleFactor=1.1,
-            minNeighbors=5,
-            minSize=(60, 60)
-        )
-
-        if len(faces) == 0:
-            return None
-
-        # pick largest face
-        faces = sorted(faces, key=lambda b: b[2] * b[3], reverse=True)
-        x, y, w, h = faces[0]
-
-        # add small padding
-        pad = 10
-        x1 = max(0, x - pad)
-        y1 = max(0, y - pad)
-        x2 = min(frame.shape[1], x + w + pad)
-        y2 = min(frame.shape[0], y + h + pad)
-
-        face_crop = frame[y1:y2, x1:x2]
-        return face_crop, (x1, y1, x2, y2)
+        self.tesselation = vision.FaceLandmarksConnections.FACE_LANDMARKS_TESSELATION
 
     def predict(self, frame):
-        detected = self.detect_face(frame)
-        if detected is None:
+        h, w = frame.shape[:2]
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        results = self.detector.detect(mp_image)
+
+        if not results.face_landmarks:
             return ("unknown", 0.0, None)
 
-        face_crop, bbox = detected
+        landmarks = results.face_landmarks[0]
+        points = [(int(lm.x * w), int(lm.y * h)) for lm in landmarks]
 
-        # Convert OpenCV BGR -> RGB for PIL
-        face_rgb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
-        face_pil = Image.fromarray(face_rgb)
+        black_bg = np.zeros((h, w, 3), dtype=np.uint8)
+        for conn in self.tesselation:
+            s, e = conn.start, conn.end
+            if s < len(points) and e < len(points):
+                cv2.line(black_bg, points[s], points[e], (255, 255, 255), 1)
 
-        input_tensor = self.transform(face_pil).unsqueeze(0).to(self.device)
+        pil_image = Image.fromarray(cv2.resize(black_bg, (224, 224)))
+        input_tensor = self.transform(pil_image).unsqueeze(0).to(self.device)
 
         with torch.no_grad():
-            logits = self.model(input_tensor)
-            probs = torch.softmax(logits, dim=1)
+            probs = torch.softmax(self.model(input_tensor), dim=1)
             conf, pred_idx = torch.max(probs, dim=1)
 
-        label = self.class_names[pred_idx.item()]
-        confidence = conf.item()
+        x_coords = [p[0] for p in points]
+        y_coords = [p[1] for p in points]
+        bbox = (max(0, min(x_coords) - 10), max(0, min(y_coords) - 10),
+                min(w, max(x_coords) + 10), min(h, max(y_coords) + 10))
 
-        return (label, confidence, bbox)
+        return (self.class_names[pred_idx.item()], conf.item(), bbox)
 
 #UI configuration
 def emotion_color(emotion):
@@ -473,12 +431,12 @@ def main():
     # Load FER model
     fer_model = None
     try:
-        fer_model = ResNetFER(
+        fer_model = SqueezeNetFER(
             model_path=MODEL_PATH,
             class_names=CLASS_NAMES,
-            use_grayscale=USE_GRAYSCALE_MODEL
+            task_path=TASK_PATH,
         )
-        print(f"[INFO] FER model loaded from: {MODEL_PATH}")
+        print(f"[INFO] SqueezeNet FER model loaded from: {MODEL_PATH}")
         print(f"[INFO] Running on device: {fer_model.device}")
     except Exception as e:
         print(f"[WARN] FER model not found, using fake FER: {e}")
