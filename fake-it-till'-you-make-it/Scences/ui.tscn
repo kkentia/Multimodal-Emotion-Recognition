@@ -54,10 +54,10 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="SpellbookBtn" type="TextureButton" parent="." unique_id=280788790]
-offset_left = 973.0
-offset_top = 472.0
-offset_right = 1131.0
-offset_bottom = 642.0
+offset_left = 1116.0
+offset_top = 549.0
+offset_right = 1274.0
+offset_bottom = 719.0
 toggle_mode = true
 texture_normal = ExtResource("1_1qoxe")
 texture_pressed = ExtResource("2_jigfe")
@@ -65,10 +65,10 @@ ignore_texture_size = true
 stretch_mode = 0
 
 [node name="OpenedBook" type="TextureRect" parent="." unique_id=1104542033]
-offset_left = 308.0
-offset_top = 144.0
-offset_right = 828.0
-offset_bottom = 504.0
+offset_left = 383.0
+offset_top = 170.0
+offset_right = 903.0
+offset_bottom = 530.0
 texture = ExtResource("3_2ydy1")
 expand_mode = 1
 
@@ -96,18 +96,18 @@ offset_bottom = 334.0
 text = "See Instructions"
 
 [node name="tutorial" type="ColorRect" parent="." unique_id=112637210]
-offset_left = -21.0
-offset_top = -8.0
-offset_right = 1181.0
-offset_bottom = 670.0
+offset_left = -2.0
+offset_top = 2.0
+offset_right = 1293.0
+offset_bottom = 726.0
 color = Color(0, 0, 0, 0.28627452)
 
 [node name="TextureRect" type="TextureRect" parent="tutorial" unique_id=2138072898]
 layout_mode = 0
-offset_left = 306.0
-offset_top = 14.0
-offset_right = 902.0
-offset_bottom = 604.0
+offset_left = 355.0
+offset_top = 45.0
+offset_right = 951.0
+offset_bottom = 635.0
 texture = ExtResource("5_2ydy1")
 
 [node name="Label" type="Label" parent="tutorial/TextureRect" unique_id=859427288]
@@ -140,28 +140,28 @@ text = "X"
 flat = true
 
 [node name="Settings" type="Button" parent="." unique_id=1293735417]
-offset_left = 1063.0
-offset_top = 2.0
-offset_right = 1151.0
-offset_bottom = 68.0
+offset_left = 1200.0
+offset_top = 9.0
+offset_right = 1288.0
+offset_bottom = 75.0
 icon = ExtResource("8_xfvjy")
 flat = true
 expand_icon = true
 
 [node name="settings" type="ColorRect" parent="Settings" unique_id=333948148]
 layout_mode = 0
-offset_left = -1080.0
+offset_left = -1211.0
 offset_top = -15.0
 offset_right = 122.0
-offset_bottom = 663.0
+offset_bottom = 743.0
 color = Color(0, 0, 0, 0.28627452)
 
 [node name="TextureRect" type="TextureRect" parent="Settings/settings" unique_id=1948117252]
 layout_mode = 0
-offset_left = 306.0
-offset_top = 14.0
-offset_right = 902.0
-offset_bottom = 604.0
+offset_left = 363.0
+offset_top = 54.0
+offset_right = 959.0
+offset_bottom = 644.0
 texture = ExtResource("5_2ydy1")
 
 [node name="CloseBtn" type="Button" parent="Settings/settings/TextureRect" unique_id=1599084933]
