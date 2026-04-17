@@ -33,10 +33,10 @@ CONF_THRESHOLD = 0.0
 
 WINDOW_NAME = "Emotion Spell Interface"
 
-MODEL_PATH = "best_squeezenet_mesh_full_5_actors_split.pth"
+MODEL_PATH = "models/saved_weights/best_squeezenet_mesh_full_5_actors_split.pth"
 TASK_PATH  = "models/face_landmarker.task"
 
-CLASS_NAMES = ["angry", "fear", "happy", "sad"]
+CLASS_NAMES = ["angry", "fear", "happy", "neutral", "sad"]
 
 WHISPER_MODEL_SIZE = "base"
 WHISPER_INTERVAL   = 3.0
@@ -49,10 +49,10 @@ SER_LABEL_MAP = {
     "angry":     "angry",
     "fearful":   "fear",
     "happy":     "happy",
-    "neutral":   "sad",
+    "neutral":   "neutral",
     "sad":       "sad",
     "surprised": "happy",
-    "calm":      "sad",
+    "calm":      "neutral",
     "disgust":   "angry",
 }
 
