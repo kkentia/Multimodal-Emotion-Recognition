@@ -51,4 +51,14 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hev48")
 text = "PLAY"
 flat = true
 
+[node name="loading" type="Label" parent="TextureRect/PlayBtn" unique_id=374915990]
+layout_mode = 0
+offset_left = 202.0
+offset_top = 174.0
+offset_right = 365.0
+offset_bottom = 233.0
+theme_override_fonts/font = ExtResource("2_hev48")
+theme_override_font_sizes/font_size = 29
+text = "LOADING . . ."
+
 [connection signal="pressed" from="TextureRect/PlayBtn" to="." method="_on_play_btn_pressed"]

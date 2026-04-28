@@ -46,3 +46,67 @@ Thumbs.db
 *.tmp
 *.bak
 
+
+
+# Godot
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+*.translation
+
+# Plugin assets that can be re-downloaded
+fake-it-till-you-make-it/Assets/Map/godot_heightmap_plugin/
+fake-it-till-you-make-it/Assets/Map/SimpleGrassTextured/
+
+
+# Ignore the Godot map plugin downloads completely
+**/godot_heightmap_plugin/
+**/SimpleGrassTextured/
+
+# Or more aggressive — ignore the entire Map folder
+**/Assets/Map/
+
+
+# IDE
+.vscode/
+.idea/
+
+# Python virtual env
+.venv2/
+__pycache__/
+*.pyc
+
+# === Godot ===
+.godot/
+.import/
+*.translation
+export.cfg
+export_presets.cfg
+
+# === Plugins (re-installable from AssetLib) ===
+# Keep ONLY the addon you actually use:
+fake-it-till*/addons/*
+!fake-it-till*/addons/infinite_heightmap_terrain/ #! is a "don't ignore" override.
+
+# === Plugin demos & docs ===
+**/demo/
+**/doc/
+
+# === Runtime-generated terrain data ===
+fake-it-till*/terrain_data/
+
+# === Old/unused map plugins ===
+**/Map/godot_heightmap_plugin/
+**/Map/SimpleGrassTextured/
+
+# === Python ===
+.venv2/
+.venv/
+__pycache__/
+*.pyc
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp

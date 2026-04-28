@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://busnnhveflnsy"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w17j4"]
+albedo_color = Color(0.41960785, 0.49019608, 0.22745098, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_hn2gs"]
+material = SubResource("StandardMaterial3D_w17j4")
+radius = 25.065
+height = 82.316
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_mhdxw"]
+radius = 5.0
+
+[node name="Hill" type="Node3D" unique_id=579206263]
+
+[node name="Hill" type="StaticBody3D" parent="." unique_id=2111078912]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Hill" unique_id=693886749]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -11.64157, 0)
+mesh = SubResource("SphereMesh_hn2gs")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hill" unique_id=1948075032]
+shape = SubResource("SphereShape3D_mhdxw")

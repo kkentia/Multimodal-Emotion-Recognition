@@ -10,6 +10,8 @@ extends CanvasLayer
 @onready var player_health_bar =$PlayerHealthBar
 @onready var audio_stream = $"../AudioStreamPlayer2D"
 @onready var audio_check_button= $Settings/settings/TextureRect/AudioCheckButton
+@onready var crosshair = $Crosshair
+@onready var spellbook_btn = $SpellbookBtn
 
 # UDP listeners
 # := sets the variable type to whatever is on the other side of the equal sign
@@ -21,7 +23,8 @@ func _ready() -> void:
 	settings.visible=false
 	tutorial.visible=true
 	audio_check_button.button_pressed=true
-	
+	update_mouse_and_crosshair()
+
 	
 	
 	#listen to python script server (resnet_UI_godot_bridge.py)
@@ -67,9 +70,25 @@ func _process(_delta: float) -> void:  # fix the warning too
 					dict["speech_emotion"], dict["speech_confidence"]
 				)
 	
-	if Input.is_action_just_pressed("ui_cancel"): #this is escape by default for some reason
-		settings.visible= not settings.visible
-	
+
+	if Input.is_action_just_pressed("ui_cancel"):
+		# Priority order: close any open popup first
+		if settings.visible:
+			settings.visible = false
+		elif opened_book.visible:
+			opened_book.visible = false
+		elif tutorial.visible:
+			tutorial.visible = false
+		else:
+			# No popups open → open settings
+			settings.visible = true
+		update_mouse_and_crosshair()
+	# E key — toggle spellbook
+	if Input.is_action_just_pressed("toggle_spellbook"):
+		spellbook_btn.button_pressed = not spellbook_btn.button_pressed
+		opened_book.visible = spellbook_btn.button_pressed
+		update_mouse_and_crosshair()
+		
 func update_ai_text(spell: String, fer_emo: String, fer_prob: float, ser_emo: String, ser_prob: float):
 	text_label.text = "Spell: " + str(spell)
 	fer_label.text = "Face: " + fer_emo.capitalize() + " " + str(int(fer_prob * 100)) + "%"
@@ -83,19 +102,32 @@ func update_player_health(current_health:int):
 
 
 
-
+func update_mouse_and_crosshair():
+	# Check if any popup is open
+	var any_popup_open = settings.visible or opened_book.visible or tutorial.visible
+	
+	if any_popup_open:
+		# Show mouse cursor for clicking buttons, hide crosshair
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		crosshair.visible = false
+	else:
+		# Hide cursor (captured for FPS look), show aim crosshair
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		crosshair.visible = true
 
 func _on_spellbook_btn_pressed() -> void:
 	opened_book.visible = not opened_book.visible
-
+	update_mouse_and_crosshair()
+	
 func _on_settings_pressed() -> void:
 	settings.visible = not settings.visible
 	print("Settings toggled!")
-
+	update_mouse_and_crosshair()
 
 func _on_close_btn_pressed() -> void:
 	settings.visible= false
 	tutorial.visible=false
+	update_mouse_and_crosshair()
 
 
 func _on_exit_game_pressed() -> void:
@@ -104,12 +136,15 @@ func _on_exit_game_pressed() -> void:
 
 func _on_open_tutorial_pressed() -> void:
 	tutorial.visible=true
+	update_mouse_and_crosshair()
 
 
 func _on_check_button_toggled(toggled_on: bool) -> void:
 	if toggled_on:
 		audio_stream.volume_db= 0 #unmute
 	else: audio_stream.volume_db=-100 ##not audible to human ear
+	
+	
 	
 
 

@@ -13,15 +13,18 @@
 script = ExtResource("1_y8r8y")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=2124034026]
+visible = false
 position = Vector2(650.5, 364.5)
 scale = Vector2(0.54788136, 0.44695124)
 texture = ExtResource("2_n0bbk")
 
 [node name="Enemy" parent="." unique_id=450527774 instance=ExtResource("2_er1sx")]
+visible = false
 position = Vector2(640, 426)
 scale = Vector2(0.39, 0.39)
 
 [node name="foreground" type="Sprite2D" parent="." unique_id=1471897837]
+visible = false
 position = Vector2(652.5, 386.50003)
 scale = Vector2(0.5572034, 0.45426834)
 texture = ExtResource("3_1dgwv")
@@ -33,10 +36,10 @@ stream = ExtResource("6_n0bbk")
 autoplay = true
 
 [node name="you_won" type="Label" parent="." unique_id=1023757549]
-offset_left = 450.0
-offset_top = 139.0
-offset_right = 693.0
-offset_bottom = 244.0
+offset_left = 516.0
+offset_top = 138.0
+offset_right = 759.0
+offset_bottom = 243.0
 theme_override_fonts/font = ExtResource("7_2r8x1")
 theme_override_font_sizes/font_size = 50
 text = "YOU WON! "
@@ -51,9 +54,9 @@ theme_override_fonts/font = ExtResource("7_2r8x1")
 theme_override_font_sizes/font_size = 40
 
 [node name="game_over" type="Label" parent="." unique_id=1023757550]
-offset_left = 400.0
+offset_left = 489.0
 offset_top = 139.0
-offset_right = 750.0
+offset_right = 839.0
 offset_bottom = 244.0
 theme_override_colors/font_color = Color(1, 0, 0, 1)
 theme_override_fonts/font = ExtResource("7_2r8x1")
