@@ -56,7 +56,7 @@ func _physics_process(delta):
 		if Input.is_action_just_pressed("ui_accept"):
 			velocity.y = JUMP_VELOCITY
 	else:
-		var gravity_multiplier = 2.5 if velocity.y < 0 else 1.0
+		var gravity_multiplier = 10 if velocity.y < 0 else 1.0
 		velocity.y -= gravity * gravity_multiplier * delta
 	
 	# Horizontal

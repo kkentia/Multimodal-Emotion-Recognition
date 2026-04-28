@@ -1,16 +1,22 @@
 [gd_scene format=3 uid="uid://con0cwhfng2wl"]
 
+[ext_resource type="Texture2D" uid="uid://cov5f7k32htc5" path="res://Assets/Map/HDR_blue_nebulae_3.hdr" id="1_e5wd5"]
 [ext_resource type="Material" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG.tres" id="2_as664"]
 [ext_resource type="Script" uid="uid://lef5qvnsl3ab" path="res://Scripts/3d/player.gd" id="3_4kx6a"]
 [ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="4_1fybv"]
 [ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="5_hxy3m"]
 [ext_resource type="Script" uid="uid://cshbgjf7ppxmx" path="res://addons/infinite_heightmap_terrain/infinite_terrain.gd" id="6_e5wd5"]
 
-[sub_resource type="Sky" id="Sky_as664"]
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_kdf6n"]
+panorama = ExtResource("1_e5wd5")
+
+[sub_resource type="Sky" id="Sky_g8glf"]
+sky_material = SubResource("PanoramaSkyMaterial_kdf6n")
 
 [sub_resource type="Environment" id="Environment_as664"]
+background_mode = 2
 background_energy_multiplier = 7.52
-sky = SubResource("Sky_as664")
+sky = SubResource("Sky_g8glf")
 sky_custom_fov = 29.5
 sky_rotation = Vector3(0, -0.7853982, 0)
 ambient_light_color = Color(0.15618286, 0.374306, 0.99993104, 1)
