@@ -3,8 +3,15 @@
 [ext_resource type="Texture2D" uid="uid://cov5f7k32htc5" path="res://Assets/Map/HDR_blue_nebulae_3.hdr" id="1_e5wd5"]
 [ext_resource type="Material" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG.tres" id="2_as664"]
 [ext_resource type="Script" uid="uid://lef5qvnsl3ab" path="res://Scripts/3d/player.gd" id="3_4kx6a"]
+[ext_resource type="AudioStream" uid="uid://mxbngaepiv3r" path="res://Assets/Audio/assets_audio_jump_sound.wav" id="3_e5wd5"]
 [ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="4_1fybv"]
 [ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="5_hxy3m"]
+[ext_resource type="Texture2D" uid="uid://b7wn5r02542xp" path="res://Assets/Textures/2k_mercury.jpg" id="7_mpsoo"]
+[ext_resource type="Texture2D" uid="uid://pburc1rstrdc" path="res://Assets/Textures/2k_earth_daymap.jpg" id="8_yy2vc"]
+[ext_resource type="Texture2D" uid="uid://didprewd1suif" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_AmbientOcclusion.png" id="9_0ijpo"]
+[ext_resource type="Texture2D" uid="uid://mb4x3wbs0bju" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Displacement.png" id="10_rem25"]
+[ext_resource type="Texture2D" uid="uid://dp366s5ay5ptt" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_NormalGL.png" id="11_avmwb"]
+[ext_resource type="Texture2D" uid="uid://cdvv8isbq8v0j" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Roughness.png" id="12_ohq7n"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_kdf6n"]
 panorama = ExtResource("1_e5wd5")
@@ -24,7 +31,7 @@ reflected_light_source = 2
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b307k"]
 
-[sub_resource type="SphereMesh" id="SphereMesh_e5wd5"]
+[sub_resource type="SphereMesh" id="SphereMesh_5qjsa"]
 material = ExtResource("2_as664")
 radius = 200.0
 height = 400.0
@@ -33,6 +40,59 @@ rings = 48
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_e5wd5"]
 radius = 200.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xn8me"]
+albedo_texture = ExtResource("7_mpsoo")
+
+[sub_resource type="SphereMesh" id="SphereMesh_50ats"]
+material = SubResource("StandardMaterial3D_xn8me")
+radius = 200.0
+height = 400.0
+radial_segments = 96
+rings = 48
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sxfkn"]
+albedo_texture = ExtResource("8_yy2vc")
+roughness_texture = ExtResource("12_ohq7n")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_texture = ExtResource("11_avmwb")
+ao_enabled = true
+ao_texture = ExtResource("9_0ijpo")
+ao_texture_channel = 4
+heightmap_enabled = true
+heightmap_scale = 1.0
+heightmap_texture = ExtResource("10_rem25")
+
+[sub_resource type="SphereMesh" id="SphereMesh_pibm3"]
+material = SubResource("StandardMaterial3D_sxfkn")
+radius = 200.0
+height = 400.0
+radial_segments = 96
+rings = 48
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wp02q"]
+load_path = "res://.godot/imported/2k_venus_surface.jpg-18cd88a8cb7d51b4fb93b4ff28407893.s3tc.ctex"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nb71f"]
+albedo_texture = SubResource("CompressedTexture2D_wp02q")
+roughness_texture = ExtResource("12_ohq7n")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_texture = ExtResource("11_avmwb")
+ao_enabled = true
+ao_texture = ExtResource("9_0ijpo")
+ao_texture_channel = 4
+heightmap_enabled = true
+heightmap_scale = 1.0
+heightmap_texture = ExtResource("10_rem25")
+
+[sub_resource type="SphereMesh" id="SphereMesh_vpcyp"]
+material = SubResource("StandardMaterial3D_nb71f")
+radius = 200.0
+height = 400.0
+radial_segments = 96
+rings = 48
 
 [node name="Main3d" type="Node3D" unique_id=118191589]
 
@@ -48,7 +108,6 @@ floor_stop_on_slope = false
 floor_constant_speed = true
 floor_max_angle = 3.1415927
 script = ExtResource("3_4kx6a")
-spawn_position = null
 planets = [NodePath("../Planet"), NodePath("../Planet2"), NodePath("../Planet3"), NodePath("../Planet4")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1967824997]
@@ -56,6 +115,10 @@ shape = SubResource("CapsuleShape3D_b307k")
 
 [node name="Camera3D" type="Camera3D" parent="Player" unique_id=576357815]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 60, 0)
+
+[node name="JumpSound" type="AudioStreamPlayer3D" parent="Player" unique_id=207768860]
+stream = ExtResource("3_e5wd5")
+volume_db = 31.724
 
 [node name="UI" parent="." unique_id=1263911513 instance=ExtResource("4_1fybv")]
 
@@ -66,7 +129,7 @@ autoplay = true
 [node name="Planet" type="StaticBody3D" parent="." unique_id=1805927758]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Planet" unique_id=447065959]
-mesh = SubResource("SphereMesh_e5wd5")
+mesh = SubResource("SphereMesh_5qjsa")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Planet" unique_id=364714563]
 shape = SubResource("SphereShape3D_e5wd5")
@@ -75,7 +138,7 @@ shape = SubResource("SphereShape3D_e5wd5")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 800, 217.012, 540.225)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Planet2" unique_id=1391274868]
-mesh = SubResource("SphereMesh_e5wd5")
+mesh = SubResource("SphereMesh_50ats")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Planet2" unique_id=1122991430]
 shape = SubResource("SphereShape3D_e5wd5")
@@ -84,7 +147,7 @@ shape = SubResource("SphereShape3D_e5wd5")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -700, 200, 600)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Planet3" unique_id=1179562794]
-mesh = SubResource("SphereMesh_e5wd5")
+mesh = SubResource("SphereMesh_pibm3")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Planet3" unique_id=1508674219]
 shape = SubResource("SphereShape3D_e5wd5")
@@ -93,7 +156,7 @@ shape = SubResource("SphereShape3D_e5wd5")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 300, -500, -800)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Planet4" unique_id=1788987156]
-mesh = SubResource("SphereMesh_e5wd5")
+mesh = SubResource("SphereMesh_vpcyp")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Planet4" unique_id=2072161529]
 shape = SubResource("SphereShape3D_e5wd5")

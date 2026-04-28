@@ -16,6 +16,8 @@ const LAUNCH_DETECTION_RADIUS = 200.0 # extra "magnetism" radius around planets
 @export var planets: Array[Node3D] = []   # drag all planet nodes here
 
 @onready var camera = $Camera3D
+@onready var jump_sound = $JumpSound
+
 
 var current_up := Vector3.UP
 var current_planet: Node3D = null
@@ -56,9 +58,11 @@ func _physics_process(delta):
 		var target_planet = get_aimed_planet()
 		if target_planet and target_planet != current_planet:
 			launch_toward(target_planet)
+			jump_sound.play()
 		elif is_on_planet_surface():
 			# Normal jump
 			velocity += current_up * JUMP_VELOCITY
+			
 	
 	# === Apply gravity toward nearest planet ===
 	velocity += gravity_dir * GRAVITY_STRENGTH * delta
