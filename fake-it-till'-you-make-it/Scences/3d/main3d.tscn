@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://lef5qvnsl3ab" path="res://Scripts/3d/player.gd" id="3_4kx6a"]
 [ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="4_1fybv"]
 [ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="5_hxy3m"]
-[ext_resource type="Script" uid="uid://cshbgjf7ppxmx" path="res://addons/infinite_heightmap_terrain/infinite_terrain.gd" id="6_e5wd5"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_kdf6n"]
 panorama = ExtResource("1_e5wd5")
@@ -25,11 +24,15 @@ reflected_light_source = 2
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b307k"]
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_g8glf"]
+[sub_resource type="SphereMesh" id="SphereMesh_e5wd5"]
+material = ExtResource("2_as664")
+radius = 200.0
+height = 400.0
+radial_segments = 96
+rings = 48
 
-[sub_resource type="Curve" id="Curve_g8glf"]
-_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.49999997, 0.72075474), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
-point_count = 3
+[sub_resource type="SphereShape3D" id="SphereShape3D_e5wd5"]
+radius = 200.0
 
 [node name="Main3d" type="Node3D" unique_id=118191589]
 
@@ -40,8 +43,13 @@ shadow_enabled = true
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=702155934]
 environment = SubResource("Environment_as664")
 
-[node name="Player" type="CharacterBody3D" parent="." unique_id=600683419]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=600683419 node_paths=PackedStringArray("planets")]
+floor_stop_on_slope = false
+floor_constant_speed = true
+floor_max_angle = 3.1415927
 script = ExtResource("3_4kx6a")
+spawn_position = null
+planets = [NodePath("../Planet"), NodePath("../Planet2"), NodePath("../Planet3"), NodePath("../Planet4")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1967824997]
 shape = SubResource("CapsuleShape3D_b307k")
@@ -55,18 +63,37 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 60, 0)
 stream = ExtResource("5_hxy3m")
 autoplay = true
 
-[node name="InfiniteTerrain" type="StaticBody3D" parent="." unique_id=217350457 node_paths=PackedStringArray("player")]
-script = ExtResource("6_e5wd5")
-player = NodePath("../Player")
-generate_new_chunks = false
-terrain_noise = SubResource("FastNoiseLite_g8glf")
-terrain_chunk_size = 256.0
-chunk_radius = 3
-mesh_resolution = 0.1
-terrain_height_multiplier = 20.0
-terrain_color_steepness_curve = SubResource("Curve_g8glf")
-terrain_material = ExtResource("2_as664")
-enable_distant_terrain = false
-distant_terrain_update_during_gameplay = false
-distant_terrain_mesh_size = 1600.0
-metadata/_custom_type_script = "uid://cshbgjf7ppxmx"
+[node name="Planet" type="StaticBody3D" parent="." unique_id=1805927758]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Planet" unique_id=447065959]
+mesh = SubResource("SphereMesh_e5wd5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Planet" unique_id=364714563]
+shape = SubResource("SphereShape3D_e5wd5")
+
+[node name="Planet2" type="StaticBody3D" parent="." unique_id=1856675130]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 800, 217.012, 540.225)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Planet2" unique_id=1391274868]
+mesh = SubResource("SphereMesh_e5wd5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Planet2" unique_id=1122991430]
+shape = SubResource("SphereShape3D_e5wd5")
+
+[node name="Planet3" type="StaticBody3D" parent="." unique_id=1562822057]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -700, 200, 600)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Planet3" unique_id=1179562794]
+mesh = SubResource("SphereMesh_e5wd5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Planet3" unique_id=1508674219]
+shape = SubResource("SphereShape3D_e5wd5")
+
+[node name="Planet4" type="StaticBody3D" parent="." unique_id=638423838]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 300, -500, -800)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Planet4" unique_id=1788987156]
+mesh = SubResource("SphereMesh_e5wd5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Planet4" unique_id=2072161529]
+shape = SubResource("SphereShape3D_e5wd5")
