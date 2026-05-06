@@ -5,6 +5,9 @@ var speed: float = 20.0
 var damage: int = 10
 var lifetime: float = 5.0
 
+func _ready():
+	print("🚀 Spell projectile ready! dir=", velocity_dir, " speed=", speed)
+
 func _process(delta):
 	global_position += velocity_dir * speed * delta
 	

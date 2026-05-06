@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://dh3pjlquc3m1h"]
 
+[ext_resource type="Script" uid="uid://dq6mqmjmbug6e" path="res://Scripts/3d/spell_projectile.gd" id="1_g8mr2"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5vf37"]
 albedo_color = Color(0.59725267, 0.30426773, 0.061026573, 1)
 emission_enabled = true
@@ -16,8 +18,11 @@ height = 0.3
 [sub_resource type="SphereShape3D" id="SphereShape3D_ognoa"]
 radius = 0.2
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_00rka"]
+
 [node name="Spell" type="Node3D" unique_id=1181115170]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+script = ExtResource("1_g8mr2")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1472063018]
 material_override = SubResource("StandardMaterial3D_5vf37")
@@ -31,3 +36,6 @@ light_energy = 3.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=554149081]
 shape = SubResource("SphereShape3D_ognoa")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="." unique_id=1400646827]
+process_material = SubResource("ParticleProcessMaterial_00rka")

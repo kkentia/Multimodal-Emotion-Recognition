@@ -141,7 +141,6 @@ text = "X"
 flat = true
 
 [node name="Settings" type="Button" parent="." unique_id=1293735417]
-visible = false
 offset_left = 1200.0
 offset_top = 9.0
 offset_right = 1288.0
@@ -232,6 +231,18 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("8_335ti")
 expand_mode = 1
+
+[node name="CastedLabel" type="Label" parent="." unique_id=1475186585]
+visible = false
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 514.0
+offset_top = 12.0
+offset_right = -509.0
+offset_bottom = 100.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 64
+text = "CASTED!"
 
 [connection signal="pressed" from="SpellbookBtn" to="." method="_on_spellbook_btn_pressed"]
 [connection signal="toggled" from="SpellbookBtn" to="." method="_on_spellbook_btn_toggled"]

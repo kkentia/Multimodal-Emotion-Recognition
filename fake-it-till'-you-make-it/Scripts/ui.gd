@@ -12,6 +12,7 @@ extends CanvasLayer
 @onready var audio_check_button= $Settings/settings/TextureRect/AudioCheckButton
 @onready var crosshair = $Crosshair
 @onready var spellbook_btn = $SpellbookBtn
+@onready var casted_label = $CastedLabel
 
 # UDP listeners
 # := sets the variable type to whatever is on the other side of the equal sign
@@ -130,6 +131,32 @@ func update_mouse_and_crosshair():
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 		crosshair.visible = true
 
+
+
+
+
+func show_casted_message(spell_name: String):
+	casted_label.text = spell_name.to_upper() + " CASTED!"
+	casted_label.visible = true
+		
+		# Optional: scale-up animation
+	casted_label.scale = Vector2(0.5, 0.5)
+	var tween = create_tween()
+	tween.tween_property(casted_label, "scale", Vector2(1.2, 1.2), 0.2)
+	tween.tween_property(casted_label, "scale", Vector2(1.0, 1.0), 0.1)
+		
+		# Hide after 1.5 seconds
+	await get_tree().create_timer(1.5).timeout
+		
+		# Fade out
+	var fade_tween = create_tween()
+	fade_tween.tween_property(casted_label, "modulate:a", 0.0, 0.3)
+	await fade_tween.finished
+	
+	casted_label.visible = false
+	casted_label.modulate.a = 1.0   # reset for next time
+	
+	
 func _on_spellbook_btn_pressed() -> void:
 	opened_book.visible = not opened_book.visible
 	update_mouse_and_crosshair()

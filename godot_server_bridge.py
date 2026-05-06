@@ -19,7 +19,11 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
-
+# for speech-to-text model
+import queue
+import threading
+import sounddevice as sd
+import vosk
 # ---------------------------------------------------- SQUEEZE NET -----------------------------------------------------------
 
 # ==========================================
@@ -86,9 +90,11 @@ def fake_ser():
 
 
 def fake_speech_keyword():
-    """Dummy keyword detector — replace later with real speech-to-text.
-    Returns empty string when nothing detected, or one of SPELL_KEYWORDS when detected."""
-    return ""
+    """Returns the most recent detected keyword, then clears it."""
+    global detected_keyword
+    kw = detected_keyword
+    detected_keyword = ""   # reset so it only fires once
+    return kw
 
 
 # ==========================================
@@ -178,6 +184,92 @@ def main():
             udp_sock.sendto(json.dumps(payload).encode("utf-8"), (GODOT_HOST, GODOT_PORT))
             last_sent_time = now
             print(f"[DATA] face={face_label} ({face_conf:.2f}) voice={speech_label} kw='{spoken_keyword}'")
+
+
+
+
+# === SPEECH-TO-TEXT SETUP ================================================================
+
+# ==========================================
+# 6. SPEECH-TO-TEXT SETUP (clean version)
+# ==========================================
+import queue
+import threading
+import sounddevice as sd
+import vosk
+import audioop
+
+print("[INFO] Available audio devices:")
+print(sd.query_devices())
+print(f"[INFO] Default input: {sd.default.device}")
+
+VOSK_MODEL_PATH = os.path.join(REPO_ROOT, "vosk-model-small-en-us-0.15")
+
+print("[INFO] Loading Vosk speech model...")
+vosk_model = vosk.Model(VOSK_MODEL_PATH)
+recognizer = vosk.KaldiRecognizer(vosk_model, 16000)
+
+audio_queue = queue.Queue()
+detected_keyword = ""
+audio_chunks_received = 0
+
+
+def audio_callback(indata, frames, time_info, status):
+    global audio_chunks_received
+    if status:
+        print(f"[AUDIO STATUS] {status}")
+    audio_chunks_received += 1
+    if audio_chunks_received == 1:
+        print("[AUDIO] ✅ First audio chunk received!")
+    
+    audio_bytes = bytes(indata)
+    rms = audioop.rms(audio_bytes, 2)
+    if audio_chunks_received % 10 == 0:
+        print(f"[AUDIO] volume RMS: {rms}")
+    
+    audio_queue.put(audio_bytes)
+
+
+def speech_thread():
+    global detected_keyword
+    print("[INFO] 🎤 Speech thread starting...")
+    try:
+        with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype="int16",
+                               channels=1, callback=audio_callback):
+            print("[INFO] 🎤 Microphone listening for spell keywords...")
+            while True:
+                data = audio_queue.get()
+                if recognizer.AcceptWaveform(data):
+                    result = json.loads(recognizer.Result())
+                    text = result.get("text", "").strip().lower()
+                    if text:
+                        print(f"[VOSK FINAL] heard: '{text}'")
+                        for kw in SPELL_KEYWORDS:
+                            if kw in text:
+                                detected_keyword = kw
+                                print(f"🎯 Keyword detected: {kw}")
+                                break
+                else:
+                    partial = json.loads(recognizer.PartialResult())
+                    p_text = partial.get("partial", "")
+                    if p_text:
+                        print(f"[VOSK partial] {p_text}")
+    except Exception as e:
+        print(f"[ERROR] Speech thread crashed: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def fake_speech_keyword():
+    """Returns the most recent detected keyword, then clears it."""
+    global detected_keyword
+    kw = detected_keyword
+    detected_keyword = ""
+    return kw
+
+
+# Start the speech thread
+threading.Thread(target=speech_thread, daemon=True).start()
 
 
 if __name__ == "__main__":
