@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://cgjc8e2p8bxf"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5vf37"]
+albedo_color = Color(0.16217652, 0.40580654, 0.6422317, 1)
+emission_enabled = true
+emission_energy_multiplier = 3.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_36jxs"]
+albedo_color = Color(0.8895132, 0.23977733, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_uxabk"]
+material = SubResource("StandardMaterial3D_36jxs")
+radius = 0.15
+height = 0.3
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ognoa"]
+radius = 0.2
+
+[node name="Spell" type="Node3D" unique_id=1181115170]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1472063018]
+material_override = SubResource("StandardMaterial3D_5vf37")
+mesh = SubResource("SphereMesh_uxabk")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1467787326]
+light_color = Color(0.85490197, 0.41568628, 0.18039216, 1)
+light_energy = 3.0
+
+[node name="Area3D" type="Area3D" parent="." unique_id=1555847708]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=554149081]
+shape = SubResource("SphereShape3D_ognoa")

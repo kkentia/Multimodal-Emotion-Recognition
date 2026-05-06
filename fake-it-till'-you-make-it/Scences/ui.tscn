@@ -55,10 +55,10 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="SpellbookBtn" type="TextureButton" parent="." unique_id=280788790]
-offset_left = 1116.0
-offset_top = 549.0
-offset_right = 1274.0
-offset_bottom = 719.0
+offset_left = 3.0
+offset_top = 544.0
+offset_right = 161.0
+offset_bottom = 714.0
 toggle_mode = true
 texture_normal = ExtResource("1_1qoxe")
 texture_pressed = ExtResource("2_jigfe")
@@ -86,7 +86,7 @@ text = "- Fireball:     say 'Ignite'  --> Face: Angry   | Voice: Angry
 - Confusion:    say 'Baffle'  --> Face: Happy   | Voice: Angry
 - Healing:      say 'Restore' --> Face: Happy   | Voice: Happy
 - Ice Shard:    say 'Freeze'  --> Face: Sad     | Voice: Fear
-- Lightning:    say 'Strike'  --> Face: Surprise | Voice: Angry
+- Lightning:    say 'Strike'  --> Face: Fear | Voice: Angry
 - Shadow Drain: say 'Drain'   --> Face: Sad     | Voice: Sad"
 
 [node name="openTutorial" type="Button" parent="OpenedBook" unique_id=1902091896]
@@ -141,6 +141,7 @@ text = "X"
 flat = true
 
 [node name="Settings" type="Button" parent="." unique_id=1293735417]
+visible = false
 offset_left = 1200.0
 offset_top = 9.0
 offset_right = 1288.0

@@ -43,10 +43,10 @@ func _process(_delta: float) -> void:  # fix the warning too
 		print("Video packet received, size: ", packet.size())  # are packets arriving?
 		var img = Image.new()
 		var error = img.load_jpg_from_buffer(packet)
-		print("Image load error code: ", error)  # is 0 (OK)?
+		#print("Image load error code: ", error)  # is 0 (OK)?
 		if error == OK:
 			webcam_feed.texture = ImageTexture.create_from_image(img)
-			print("Texture applied")  # is this reached?
+			#print("Texture applied")  # is this reached?
 
 	# 2. RECEIVE JSON DATA
 	if udp_data.get_available_packet_count() > 0:
@@ -89,12 +89,27 @@ func _process(_delta: float) -> void:  # fix the warning too
 		opened_book.visible = spellbook_btn.button_pressed
 		update_mouse_and_crosshair()
 		
-func update_ai_text(spell: String, fer_emo: String, fer_prob: float, ser_emo: String, ser_prob: float):
-	text_label.text = "Spell: " + str(spell)
-	fer_label.text = "Face: " + fer_emo.capitalize() + " " + str(int(fer_prob * 100)) + "%"
-	ser_label.text = "Voice: " + ser_emo.capitalize() + " " + str(int(ser_prob * 100)) + "%"
+func update_ai_text(spell: String, fer_emo: String, fer_prob:float, ser_emo: String, ser_prob:float):
+		# if no keyword, infer the held spell name frmo the emotion combo
+	var display_spell= spell
+	if spell == "" or spell=="none":
+		display_spell=get_spell_name_from_emotions(fer_emo,ser_emo)
+	
+	text_label.text = "Spell: " + str(display_spell)
+	fer_label.text= "Face: " +fer_emo.capitalize() + " " + str(int(fer_prob *100)) + "%"
+	ser_label.text= "Voice: " +ser_emo.capitalize() + " " + str(int(ser_prob *100)) + "%"
 
-
+func get_spell_name_from_emotions(fer:String, ser:String) ->String:
+	fer = fer.to_lower()
+	ser=ser.to_lower()
+	
+	if fer == "angry" and ser == "angry": return "Fireball (say 'Ignite')"
+	elif fer == "happy" and ser == "angry": return "Confusion (say 'Baffle')"
+	elif fer == "happy" and ser == "happy": return "Healing (say 'Restore')"
+	elif fer == "sad" and ser == "fear": return "Ice Shard (say 'Freeze')"
+	elif fer == "fear" and ser == "angry": return "Lightning (say 'Strike')"
+	elif fer == "sad" and ser == "sad": return "Shadow Drain (say 'Drain')"
+	else: return "—"
 
 
 func update_player_health(current_health:int):

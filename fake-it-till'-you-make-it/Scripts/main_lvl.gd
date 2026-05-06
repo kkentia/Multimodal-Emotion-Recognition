@@ -10,6 +10,8 @@ const CONFIDENCE_THRESHOLD = 0.0
 @onready var you_won_label = $you_won
 @onready var game_over_label = $game_over
 @onready var spell_label = $spell_label
+@onready var spell_manager = $Player/SpellManager
+
 
 var active_enemy = null
 
@@ -31,31 +33,48 @@ func _ready() -> void:
 	active_enemy = enemy
 
 func process_ai_input(spoken_word: String, fer_emotion: String, fer_prob: float, ser_emotion: String, ser_prob: float):
-	# send data to the UI scene so it can display the txt 
+	# Send data to UI for display
+	print("📥 process_ai_input called: ", fer_emotion, "/", ser_emotion, " conf:", fer_prob, "/", ser_prob)
+
 	ui.update_ai_text(spoken_word, fer_emotion, fer_prob, ser_emotion, ser_prob)
 	
-	# thresholds
-	if fer_prob < CONFIDENCE_THRESHOLD or ser_prob < CONFIDENCE_THRESHOLD:
-		print("Emotion not strong enough! Try harder!")
-		return
-		
+	# Normalize inputs
 	spoken_word = spoken_word.to_lower().strip_edges()
 	fer_emotion = fer_emotion.to_lower()
 	ser_emotion = ser_emotion.to_lower()
-
-	#cast spells
+	
+	# === LIVE SPELL HOLDING ===
+	# Update the held spell whenever emotion combo matches (regardless of spoken word)
+	# Confidence must be high enough
+	if fer_prob >= CONFIDENCE_THRESHOLD and ser_prob >= CONFIDENCE_THRESHOLD:
+		spell_manager.update_held_spell(fer_emotion, ser_emotion)
+	else:
+		# Emotions too weak → drop any held spell
+		spell_manager.clear_held_spell()
+	
+	# === CAST SPELL (only if both emotions strong AND keyword spoken correctly) ===
+	if fer_prob < CONFIDENCE_THRESHOLD or ser_prob < CONFIDENCE_THRESHOLD:
+		print("Emotion not strong enough! Try harder!")
+		return
+	
 	if spoken_word == "ignite" and fer_emotion == "angry" and ser_emotion == "angry":
+		spell_manager.cast_spell("ignite")
 		cast_spell("Fireball")
 	elif spoken_word == "baffle" and fer_emotion == "happy" and ser_emotion == "angry":
+		spell_manager.cast_spell("baffle")
 		cast_spell("Confusion")
 	elif spoken_word == "restore" and fer_emotion == "happy" and ser_emotion == "happy":
+		spell_manager.cast_spell("restore")
 		cast_spell("Healing")
 	elif spoken_word == "freeze" and fer_emotion == "sad" and ser_emotion == "fear":
-		cast_spell("IceShard")
-	elif spoken_word == "strike" and fer_emotion == "surprise" and ser_emotion == "angry":
+		spell_manager.cast_spell("freeze")
+		cast_spell("Ice Shard")
+	elif spoken_word == "strike" and fer_emotion == "fear" and ser_emotion == "angry":
+		spell_manager.cast_spell("strike")
 		cast_spell("Lightning")
 	elif spoken_word == "drain" and fer_emotion == "sad" and ser_emotion == "sad":
-		cast_spell("ShadowDrain")
+		spell_manager.cast_spell("drain")
+		cast_spell("Shadow Drain")
 		
 func show_spell_label(text: String):
 	spell_label.text = text
