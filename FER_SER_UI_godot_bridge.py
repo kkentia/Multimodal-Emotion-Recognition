@@ -26,6 +26,11 @@ except ImportError:
 
 GODOT_HOST = "127.0.0.1"
 GODOT_PORT = 4242
+VIDEO_PORT = 4243
+
+# Set to a specific index to force a camera (e.g. 1 to skip the phone).
+# Leave as None to auto-detect (uses first available camera).
+CAMERA_INDEX = None
 
 SEND_INTERVAL = 1.0
 STABLE_REQUIRED_FRAMES = 15
@@ -57,7 +62,7 @@ SER_LABEL_MAP = {
 }
 
 def _find_ser_checkpoint():
-    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "MMUI", "results")
     if not os.path.isdir(results_dir):
         return None
     checkpoints = [
@@ -351,8 +356,16 @@ def send_to_godot_udp(sock, payload):
     sock.sendto(data, (GODOT_HOST, GODOT_PORT))
 
 def open_camera():
-    for idx in [0, 1, 2, 3]:
-        print(f"[INFO] Trying camera index {idx}...")
+    print("[INFO] Available cameras:")
+    for idx in range(4):
+        cap = cv2.VideoCapture(idx)
+        if cap.isOpened():
+            ret, _ = cap.read()
+            print(f"  [{idx}] {'(found)' if ret else '(no frame)'}")
+        cap.release()
+
+    indices = [CAMERA_INDEX] if CAMERA_INDEX is not None else [0, 1, 2, 3]
+    for idx in indices:
         cap = cv2.VideoCapture(idx)
         if not cap.isOpened():
             cap.release()
@@ -408,7 +421,9 @@ def main():
         print("[ERROR] Could not open webcam.")
         return
 
-    udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_sock   = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    video_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    video_sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65536)
     mode = Mode.FUSED
     history = deque(maxlen=10)
 
@@ -476,6 +491,9 @@ def main():
                         (x1, max(25, y1 - 10)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2, cv2.LINE_AA)
 
+        _, jpg = cv2.imencode('.jpg', cv2.resize(frame, (320, 240)), [cv2.IMWRITE_JPEG_QUALITY, 50])
+        video_sock.sendto(jpg.tobytes(), (GODOT_HOST, VIDEO_PORT))
+
         TARGET_W = 800
         h_orig, w_orig = frame.shape[:2]
         scale = TARGET_W / w_orig
@@ -531,6 +549,7 @@ def main():
             mode = Mode.FUSED
 
     udp_sock.close()
+    video_sock.close()
     cap.release()
     if whisper_transcriber:
         whisper_transcriber.stop()

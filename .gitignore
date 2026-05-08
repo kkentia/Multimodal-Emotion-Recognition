@@ -115,3 +115,10 @@ __pycache__/
 # speech-to-text model
 vosk-model-small-en-us-0.15/
 /vosk-model-small-en-us-0.15/
+
+# SER model checkpoint (too large for git)
+MMUI/results/checkpoint-728/model.safetensors
+MMUI/results/checkpoint-728/optimizer.pt
+MMUI/results/checkpoint-728/rng_state.pth
+MMUI/results/checkpoint-728/scheduler.pt
+MMUI/results/checkpoint-728/training_args.bin

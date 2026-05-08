@@ -19,3 +19,23 @@
  7. run godot_server_bridge.py to start the server that sends the video packages by UDP to a port that the godot script is listening to.
  8. open fake-it-till-you-make-it folder in Godot and run the game
 
+---
+**Running the FER + SER + Godot Bridge (`FER_SER_UI_godot_bridge.py`)**
+
+The bridge requires the trained SER model weights, which are too large for git. Download `model.safetensors` from **[ADD LINK HERE]** and place it in the following folder (the folder already exists after cloning):
+
+```
+Multimodal-Emotion-Recognition/
+└── MMUI/
+    └── results/
+        └── checkpoint-728/
+            └── model.safetensors   ← place the file here
+```
+
+Then run:
+```
+python FER_SER_UI_godot_bridge.py
+```
+
+The script loads the SER model (Wav2Vec2) from `MMUI/results/checkpoint-728/` and the FER model (SqueezeNet) from `models/saved_weights/`. If the SER model file is missing it falls back to a dummy SER output — the app will still launch but speech emotion will not work correctly.
+
