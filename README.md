@@ -37,5 +37,5 @@ Then run:
 python FER_SER_UI_godot_bridge.py
 ```
 
-The script loads the SER model (Wav2Vec2) from `MMUI/results/checkpoint-728/` and the FER model (SqueezeNet) from `models/saved_weights/`. If the SER model file is missing it falls back to a dummy SER output — the app will still launch but speech emotion will not work correctly.
+The script loads the SER model (Wav2Vec2) from `MMUI/results/checkpoint-728/` and the FER model (SqueezeNet) from `models/saved_weights/`. If the SER model file is missing it falls back to a dummy SER output.
 
