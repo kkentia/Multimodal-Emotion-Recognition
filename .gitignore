@@ -14,8 +14,9 @@ Thumbs.db
 __pycache__/
 *.pyc
 
-#vscode
+#IDE
 .vscode/
+.idea
 
 #datasets
 data/raw/
@@ -24,6 +25,7 @@ data/mesh_images/
 
 #weights
 models/saved_weights
+results/
 
 #Mac
 # macOS specific
@@ -122,3 +124,8 @@ MMUI/results/checkpoint-728/optimizer.pt
 MMUI/results/checkpoint-728/rng_state.pth
 MMUI/results/checkpoint-728/scheduler.pt
 MMUI/results/checkpoint-728/training_args.bin
+# uv
+.python-version
+*.toml
+uv.lock
+

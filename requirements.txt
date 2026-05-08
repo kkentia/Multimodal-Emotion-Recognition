@@ -23,6 +23,9 @@ numpy
 pandas
 scikit-learn
 matplotlib
+seaborn
+IPython
+datasets
 
 # utilities
 tqdm
