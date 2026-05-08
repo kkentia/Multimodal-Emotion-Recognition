@@ -22,7 +22,7 @@
 ---
 **Running the FER + SER + Godot Bridge (`FER_SER_UI_godot_bridge.py`)**
 
-The bridge requires the trained SER model weights, which are too large for git. Download `model.safetensors` from **[ADD LINK HERE]** and place it in the following folder (the folder already exists after cloning):
+The bridge requires the trained SER model weights, which are too large for git. Download `model.safetensors` from **[(https://drive.switch.ch/index.php/s/5IOTren9xu2a6A2)]** and place it in the following folder (the folder already exists after cloning):
 
 ```
 Multimodal-Emotion-Recognition/
