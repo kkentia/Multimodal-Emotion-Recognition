@@ -1,7 +1,6 @@
 extends Node3D
 
 const CONFIDENCE_THRESHOLD: float = 0.0
-const FIRE_COOLDOWN_SEC: float = 0.75
 const CAST_CHAIN_BONUS: int = 25
 
 enum FiringMode {
@@ -66,12 +65,7 @@ func _ready() -> void:
 	if drone_spawner:
 		drone_spawner.enemy_spawned.connect(_on_enemy_spawned)
 		drone_spawner.wave_started.connect(_on_wave_started)
-		drone_spawner.start_waves()
-
-
-func _process(_delta: float) -> void:
-	if ui:
-		ui.update_cooldown(_get_cooldown_remaining())
+		drone_spawner.spawn_static_enemies()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -136,16 +130,11 @@ func apply_player_heal(amount: int) -> void:
 
 
 func _try_multimodal_fire(spoken_word: String) -> void:
-	if not _can_fire():
-		return
 	if spell_manager.cast_spell(spoken_word):
 		_mark_fired(true)
 
 
 func _try_mode_fire(spoken_word: String, requires_keyword: bool) -> void:
-	if not _can_fire():
-		return
-
 	var fired: bool = false
 	if requires_keyword:
 		fired = spell_manager.cast_spell(spoken_word)
@@ -159,14 +148,11 @@ func _try_mode_fire(spoken_word: String, requires_keyword: bool) -> void:
 func _try_manual_fire() -> void:
 	if not spell_manager.has_held_spell():
 		_arm_manual_spell()
-	if not _can_fire():
-		return
 	if spell_manager.cast_current_ability(true):
 		_mark_fired(false)
 
 
 func _mark_fired(is_spellbook_cast: bool) -> void:
-	last_fire_time = Time.get_ticks_msec() / 1000.0
 	if is_spellbook_cast:
 		cast_chain += 1
 		score += CAST_CHAIN_BONUS * cast_chain
@@ -177,22 +163,31 @@ func _mark_fired(is_spellbook_cast: bool) -> void:
 	_refresh_metrics()
 
 
-func _can_fire() -> bool:
-	var now: float = Time.get_ticks_msec() / 1000.0
-	return (now - last_fire_time) >= FIRE_COOLDOWN_SEC
-
-
-func _get_cooldown_remaining() -> float:
-	var now: float = Time.get_ticks_msec() / 1000.0
-	return max(FIRE_COOLDOWN_SEC - (now - last_fire_time), 0.0)
-
-
 func _cycle_firing_mode() -> void:
 	var current_index: int = FIRING_MODE_ORDER.find(firing_mode)
 	if current_index == -1:
 		current_index = 0
-	firing_mode = FIRING_MODE_ORDER[(current_index + 1) % FIRING_MODE_ORDER.size()]
+	_set_firing_mode(FIRING_MODE_ORDER[(current_index + 1) % FIRING_MODE_ORDER.size()])
 
+
+func set_firing_mode_by_name(mode_name: String) -> void:
+	match mode_name:
+		"FER_SER_STT":
+			_set_firing_mode(FiringMode.FER_SER_STT)
+		"FER_STT":
+			_set_firing_mode(FiringMode.FER_STT)
+		"SER_STT":
+			_set_firing_mode(FiringMode.SER_STT)
+		"STT_ONLY":
+			_set_firing_mode(FiringMode.STT_ONLY)
+		"SER_ONLY":
+			_set_firing_mode(FiringMode.SER_ONLY)
+		"MANUAL":
+			_set_firing_mode(FiringMode.MANUAL)
+
+
+func _set_firing_mode(new_mode: int) -> void:
+	firing_mode = new_mode
 	if firing_mode == FiringMode.MANUAL:
 		_arm_manual_spell()
 	else:

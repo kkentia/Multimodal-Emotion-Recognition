@@ -124,8 +124,10 @@ MMUI/results/checkpoint-728/optimizer.pt
 MMUI/results/checkpoint-728/rng_state.pth
 MMUI/results/checkpoint-728/scheduler.pt
 MMUI/results/checkpoint-728/training_args.bin
+
+# Draft report files
+report/
 # uv
 .python-version
 *.toml
 uv.lock
-

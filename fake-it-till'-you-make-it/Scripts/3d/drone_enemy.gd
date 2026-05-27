@@ -4,7 +4,9 @@ signal destroyed(points: int)
 signal attacked_player(damage: int)
 
 @export var move_speed: float = 10.0
+@export var static_target: bool = true
 @export var max_health: int = 18
+@export var hits_to_kill: int = 2
 @export var point_value: int = 100
 @export var contact_damage: int = 6
 @export var attack_range: float = 24.0
@@ -16,6 +18,7 @@ signal attacked_player(damage: int)
 @export var bob_amplitude: float = 1.2
 
 var current_health: int = 0
+var hits_taken: int = 0
 var hover_phase: float = 0.0
 var last_attack_time: float = -10.0
 var base_material: StandardMaterial3D
@@ -23,11 +26,18 @@ var orbit_direction: float = 1.0
 
 @onready var mesh: MeshInstance3D = _find_primary_mesh()
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
+@onready var hitbox: Area3D = $Hitbox
+@onready var hitbox_shape: CollisionShape3D = $Hitbox/CollisionShape3D
 @onready var visual_root: Node3D = $Visual
 
 
 func _ready() -> void:
-	current_health = max_health
+	add_to_group("enemies")
+	if hitbox != null:
+		hitbox.add_to_group("enemy_hitboxes")
+		hitbox.monitorable = true
+		hitbox.monitoring = true
+	current_health = hits_to_kill
 	hover_phase = randf() * TAU
 	orbit_direction = -1.0 if randf() < 0.5 else 1.0
 	if mesh != null and mesh.get_active_material(0) is StandardMaterial3D:
@@ -56,6 +66,12 @@ func _physics_process(delta: float) -> void:
 	if "current_up" in target:
 		target_up = target.current_up.normalized()
 
+	if static_target:
+		velocity = Vector3.ZERO
+		if global_position.distance_to(target.global_position) > 0.1:
+			look_at(target.global_position, target_up, true)
+		return
+
 	var to_target: Vector3 = target.global_position - global_position
 	var vertical_error: float = to_target.dot(target_up)
 	var horizontal_to_target: Vector3 = to_target - target_up * vertical_error
@@ -77,10 +93,13 @@ func _physics_process(delta: float) -> void:
 		_try_attack()
 
 
-func take_damage(amount: int) -> void:
-	current_health -= amount
-	_flash_hit()
+func take_damage(_amount: int) -> void:
 	if current_health <= 0:
+		return
+	hits_taken += 1
+	current_health = max(hits_to_kill - hits_taken, 0)
+	_flash_hit()
+	if hits_taken >= hits_to_kill:
 		_die()
 
 
@@ -120,6 +139,8 @@ func _die() -> void:
 	velocity = Vector3.ZERO
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", true)
+	if hitbox_shape != null:
+		hitbox_shape.set_deferred("disabled", true)
 	_spawn_death_burst()
 	destroyed.emit(point_value)
 	queue_free()
