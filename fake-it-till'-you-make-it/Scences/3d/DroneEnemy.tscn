@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Scripts/3d/drone_enemy.gd" id="1_drone"]
+[ext_resource type="PackedScene" path="res://Assets/Enemies/sci-fi_camera_drone.glb" id="2_model"]
+
+[sub_resource type="SphereShape3D" id="1_collision"]
+radius = 2.1
+
+[node name="DroneEnemy" type="CharacterBody3D"]
+script = ExtResource("1_drone")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("1_collision")
+
+[node name="Visual" parent="." instance=ExtResource("2_model")]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, 0, 0)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.25, 0.25, 1)
+light_energy = 1.8

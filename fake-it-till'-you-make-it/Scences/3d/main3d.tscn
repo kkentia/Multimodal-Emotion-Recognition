@@ -7,10 +7,12 @@
 [ext_resource type="AudioStream" uid="uid://mxbngaepiv3r" path="res://Assets/Audio/assets_audio_jump_sound.wav" id="3_e5wd5"]
 [ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="4_1fybv"]
 [ext_resource type="Script" uid="uid://bceqhwcb30310" path="res://Scripts/3d/spell_manager.gd" id="4_yy2vc"]
-[ext_resource type="PackedScene" uid="uid://3l3qvhu411py" path="res://Scences/3d/Spell.tscn" id="5_0ijpo"]
 [ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="5_hxy3m"]
+[ext_resource type="PackedScene" path="res://Scences/3d/DroneEnemy.tscn" id="6_drone"]
+[ext_resource type="Script" path="res://Scripts/3d/drone_spawner.gd" id="7_spawner"]
 [ext_resource type="Texture2D" uid="uid://b7wn5r02542xp" path="res://Assets/Textures/2k_mercury.jpg" id="7_mpsoo"]
 [ext_resource type="Texture2D" uid="uid://pburc1rstrdc" path="res://Assets/Textures/2k_earth_daymap.jpg" id="8_yy2vc"]
+[ext_resource type="Texture2D" path="res://Assets/Textures/2k_jupiter.jpg" id="9_jupiter"]
 [ext_resource type="Texture2D" uid="uid://didprewd1suif" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_AmbientOcclusion.png" id="9_0ijpo"]
 [ext_resource type="Texture2D" uid="uid://mb4x3wbs0bju" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Displacement.png" id="10_rem25"]
 [ext_resource type="Texture2D" uid="uid://dp366s5ay5ptt" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_NormalGL.png" id="11_avmwb"]
@@ -74,11 +76,8 @@ height = 400.0
 radial_segments = 96
 rings = 48
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wp02q"]
-load_path = "res://.godot/imported/2k_venus_surface.jpg-18cd88a8cb7d51b4fb93b4ff28407893.s3tc.ctex"
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nb71f"]
-albedo_texture = SubResource("CompressedTexture2D_wp02q")
+albedo_texture = ExtResource("9_jupiter")
 roughness_texture = ExtResource("12_ohq7n")
 roughness_texture_channel = 4
 normal_enabled = true
@@ -131,11 +130,19 @@ volume_db = 31.724
 [node name="SpellManager" type="Node3D" parent="Player" unique_id=1354362241 node_paths=PackedStringArray("spell_hand", "camera")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 script = ExtResource("4_yy2vc")
-spell_scene = ExtResource("5_0ijpo")
 spell_hand = NodePath("../Camera3D/SpellHand")
 camera = NodePath("../Camera3D")
 
 [node name="UI" parent="." unique_id=1263911513 instance=ExtResource("4_1fybv")]
+
+[node name="DroneSpawner" type="Node3D" parent="." node_paths=PackedStringArray("spawn_anchor_paths")]
+script = ExtResource("7_spawner")
+enemy_scene = ExtResource("6_drone")
+spawn_anchor_paths = [NodePath("../Planet"), NodePath("../Planet2"), NodePath("../Planet3"), NodePath("../Planet4")]
+enemies_per_wave = 2
+max_alive = 5
+wave_interval = 5.0
+spawn_radius = 220.0
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=2023886891]
 stream = ExtResource("5_hxy3m")
