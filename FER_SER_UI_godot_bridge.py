@@ -339,7 +339,7 @@ def get_spell(spoken_word, face_label, speech_label):
         return None
     return SPELLS.get((spoken_word.lower(), face_label.lower(), speech_label.lower()), None)
 
-def build_payload(face, fer_conf, speech, ser_conf, fused_conf, spoken_word, spell):
+def build_payload(face, fer_conf, speech, ser_conf, fused_conf, spoken_word, spell, transcript):
     return {
         "face_emotion":       face,
         "face_confidence":    round(float(fer_conf), 3),
@@ -348,6 +348,7 @@ def build_payload(face, fer_conf, speech, ser_conf, fused_conf, spoken_word, spe
         "fused_confidence":   round(float(fused_conf), 3),
         "spoken_word":        spoken_word,
         "spell":              spell if spell else "",
+        "transcript":         transcript,
         "timestamp":          time.time()
     }
 
@@ -472,15 +473,16 @@ def main():
         )
 
         now = time.time()
-        if ready and (now - last_sent_time >= SEND_INTERVAL):
+        if now - last_sent_time >= SEND_INTERVAL:
             payload = build_payload(
                 face_label, face_conf,
                 speech_label, speech_conf,
-                fused_conf, spoken_word, spell
+                fused_conf, spoken_word, spell, transcript
             )
             send_to_godot_udp(udp_sock, payload)
             last_sent_time = now
-            history.appendleft(f"CAST: {spell}")
+            if ready and spell:
+                history.appendleft(f"CAST: {spell}")
             print("[INFO] Sent to Godot:", payload)
 
         if face_bbox is not None:

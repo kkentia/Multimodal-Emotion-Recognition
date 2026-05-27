@@ -18,10 +18,16 @@ const LAUNCH_DETECTION_RADIUS = 200.0 # extra "magnetism" radius around planets
 @onready var camera = $Camera3D
 @onready var jump_sound = $JumpSound
 
+@onready var spell_manager = $SpellManager
+
 
 var current_up := Vector3.UP
 var current_planet: Node3D = null
-var is_launching: bool = false           # while flying between planets, gravity is overridden
+var is_launching: bool = false 
+		  # while flying between planets, gravity is overridden
+# Manual testing mode
+var manual_spell_index := 0
+const MANUAL_SPELLS = ["Fireball", "Confusion", "Healing", "Ice Shard", "Lightning", "Shadow Drain"]
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -166,3 +172,39 @@ func align_with_gravity(delta):
 		var smooth_angle = angle * min(delta * 3.0, 1.0)
 		global_transform.basis = current_basis.rotated(rotation_axis, smooth_angle)
 		global_transform.basis = global_transform.basis.orthonormalized()
+
+func _unhandled_input(event):
+	# Only active in manual mode
+	if not SignalBus.manual_mode:
+		return
+	
+	# Number keys 1-6 pick which spell to hold
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_1: select_manual_spell(0)
+			KEY_2: select_manual_spell(1)
+			KEY_3: select_manual_spell(2)
+			KEY_4: select_manual_spell(3)
+			KEY_5: select_manual_spell(4)
+			KEY_6: select_manual_spell(5)
+	
+	# Left-click fires the held spell (only while playing, not in menus)
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			manual_cast()
+
+
+func select_manual_spell(index: int):
+	manual_spell_index = index
+	var spell_name = MANUAL_SPELLS[index]
+	spell_manager.clear_held_spell()
+	spell_manager.spawn_held_spell(spell_name)
+	print("🖐 Holding (manual): ", spell_name)
+
+
+func manual_cast():
+	if spell_manager.held_spell_name == "":
+		print("❌ No spell held — press 1-6 to pick one first")
+		return
+	var keyword = spell_manager.SPELLS[spell_manager.held_spell_name].keyword
+	spell_manager.cast_spell(keyword)

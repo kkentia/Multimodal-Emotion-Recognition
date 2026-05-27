@@ -13,6 +13,7 @@ extends CanvasLayer
 @onready var crosshair = $Crosshair
 @onready var spellbook_btn = $SpellbookBtn
 @onready var casted_label = $CastedLabel
+@onready var mode_select = $Settings/settings/TextureRect/ModeSelect
 
 # UDP listeners
 # := sets the variable type to whatever is on the other side of the equal sign
@@ -24,6 +25,8 @@ func _ready() -> void:
 	settings.visible=false
 	tutorial.visible=true
 	audio_check_button.button_pressed=true
+	mode_select.selected = 0   # default to AI mode
+	SignalBus.manual_mode = false
 	update_mouse_and_crosshair()
 
 	
@@ -189,5 +192,10 @@ func _on_check_button_toggled(toggled_on: bool) -> void:
 	
 	
 
-
-	
+func _on_mode_select_item_selected(index: int) -> void:
+	if index == 1:
+		SignalBus.manual_mode = true
+		print("🖱 Manual mode — keys 1-6 to hold, click to cast")
+	else:
+		SignalBus.manual_mode = false
+		print("🤖 AI mode — FER/SER casting")

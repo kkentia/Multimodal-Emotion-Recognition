@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 SignalBus="*uid://da6f7juv7oqaw"
+GameState="*uid://cown4k2656rp"
 
 [display]
 

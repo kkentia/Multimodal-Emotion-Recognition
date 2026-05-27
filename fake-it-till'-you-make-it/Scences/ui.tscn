@@ -206,6 +206,37 @@ offset_bottom = 21.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Sound"
 
+[node name="ModeSelect" type="OptionButton" parent="Settings/settings/TextureRect" unique_id=865933247]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.60700005
+anchor_top = 0.404
+anchor_right = 0.76500005
+anchor_bottom = 0.446
+offset_left = 0.22796631
+offset_top = -6.360016
+offset_right = 0.05996704
+offset_bottom = -0.14001465
+selected = 0
+item_count = 2
+popup/item_0/text = "FER/SER"
+popup/item_0/id = 0
+popup/item_1/text = "Click"
+popup/item_1/id = 1
+
+[node name="Label" type="Label" parent="Settings/settings/TextureRect/ModeSelect" unique_id=859933876]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -1.9470001
+anchor_right = -0.638
+anchor_bottom = 0.77400005
+offset_left = 0.01802063
+offset_top = 1.0
+offset_right = -0.027999878
+offset_bottom = 0.0059986115
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = " Shooting Mode"
+
 [node name="PlayerHealthBar" type="ProgressBar" parent="." unique_id=120560318]
 offset_left = 20.0
 offset_top = 209.0
@@ -252,3 +283,4 @@ text = "CASTED!"
 [connection signal="pressed" from="Settings/settings/TextureRect/CloseBtn" to="." method="_on_close_btn_pressed"]
 [connection signal="pressed" from="Settings/settings/TextureRect/ExitGame" to="." method="_on_exit_game_pressed"]
 [connection signal="toggled" from="Settings/settings/TextureRect/AudioCheckButton" to="." method="_on_check_button_toggled"]
+[connection signal="item_selected" from="Settings/settings/TextureRect/ModeSelect" to="." method="_on_mode_select_item_selected"]

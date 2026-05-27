@@ -20,6 +20,9 @@ func process_ai_input(spoken_word: String, fer_emotion: String, fer_prob: float,
 	# Update UI display
 	ui.update_ai_text(spoken_word, fer_emotion, fer_prob, ser_emotion, ser_prob)
 	
+	if SignalBus.manual_mode:
+		return
+		
 	# Normalize
 	spoken_word = spoken_word.to_lower().strip_edges()
 	fer_emotion = fer_emotion.to_lower()
