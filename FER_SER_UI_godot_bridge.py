@@ -164,11 +164,12 @@ SPELLS = {
     ("ignite",  "angry", "angry"): "Fireball",
     ("baffle",  "happy", "angry"): "Confusion",
     ("restore", "happy", "happy"): "Healing",
-    ("freeze",  "sad",   "fear"):  "IceShard",
-    ("drain",   "sad",   "sad"):   "ShadowDrain",
+    ("freeze",  "sad",   "fear"):  "Ice Shard",
+    ("strike",  "fear",  "angry"): "Lightning",
+    ("drain",   "sad",   "sad"):   "Shadow Drain",
 }
 
-SPELL_KEYWORDS = {"ignite", "baffle", "restore", "freeze", "drain"}
+SPELL_KEYWORDS = {"ignite", "baffle", "restore", "freeze", "strike", "drain"}
 
 def extract_spoken_word(transcript: str) -> str:
     text_lower = transcript.lower()
