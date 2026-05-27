@@ -7,7 +7,6 @@
 [ext_resource type="AudioStream" uid="uid://mxbngaepiv3r" path="res://Assets/Audio/assets_audio_jump_sound.wav" id="3_e5wd5"]
 [ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="4_1fybv"]
 [ext_resource type="Script" uid="uid://bceqhwcb30310" path="res://Scripts/3d/spell_manager.gd" id="4_yy2vc"]
-[ext_resource type="PackedScene" uid="uid://3l3qvhu411py" path="res://Scences/3d/Spell.tscn" id="5_0ijpo"]
 [ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="5_hxy3m"]
 [ext_resource type="Texture2D" uid="uid://b7wn5r02542xp" path="res://Assets/Textures/2k_mercury.jpg" id="7_mpsoo"]
 [ext_resource type="Texture2D" uid="uid://pburc1rstrdc" path="res://Assets/Textures/2k_earth_daymap.jpg" id="8_yy2vc"]
@@ -131,7 +130,6 @@ volume_db = 31.724
 [node name="SpellManager" type="Node3D" parent="Player" unique_id=1354362241 node_paths=PackedStringArray("spell_hand", "camera")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 script = ExtResource("4_yy2vc")
-spell_scene = ExtResource("5_0ijpo")
 spell_hand = NodePath("../Camera3D/SpellHand")
 camera = NodePath("../Camera3D")
 

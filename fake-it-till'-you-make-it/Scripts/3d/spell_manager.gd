@@ -85,6 +85,9 @@ func clear_held_spell():
 
 
 func cast_spell(spoken_keyword: String):
+	print("🔥 cast_spell got keyword: '", spoken_keyword, "' | held: '", held_spell_name, "'")
+	push_error("CAST_SPELL CALLED")
+	
 	if held_spell_name == "":
 		return
 	
@@ -114,21 +117,34 @@ func cast_spell(spoken_keyword: String):
 	var spell_instance = held_spell_node
 	held_spell_node = null
 	held_spell_name = ""
-	
-	var ray_dir = -camera.global_transform.basis.z
-	
-	# Reparent to scene root
+
+	var cam = get_viewport().get_camera_3d()
+
+	if not cam:
+		print("no acive pov found")
+		return
+		
+	# DEBUG: print the raw global transform
+	print("CAM global_transform.basis.z = ", cam.global_transform.basis.z)
+	print("CAM global rotation = ", cam.global_rotation)
+	print("CAM is current? ", cam.current, "  name: ", cam.name)
+	# Grab camera's CURRENT forward direction and position RIGHT NOW
+	var cam_transform = cam.global_transform
+	var shoot_dir = -cam_transform.basis.z      # camera forward
+	var shoot_origin = cam_transform.origin     # camera position
+
+# Reparent so it flies freely in space
 	spell_instance.get_parent().remove_child(spell_instance)
-	var scene_root = get_tree().current_scene
-	scene_root.add_child(spell_instance)
-	
-	# Position in front of camera (cleaner aim)
-	spell_instance.global_position = camera.global_position + ray_dir * 2.0
-	
-	# Set launch parameters — script is already attached to the spell scene
-	spell_instance.velocity_dir = ray_dir
+
+	# SET DIRECTION FIRST (before add_child triggers _ready)
+	spell_instance.velocity_dir = shoot_dir
 	spell_instance.speed = spell.speed
 	spell_instance.damage = spell.damage
 	spell_instance.lifetime = 6.0
-	
-	print("🚀 Launched ", spell_to_cast_name, " in direction ", ray_dir, " at speed ", spell.speed)
+	spell_instance.launched=true
+
+	# NOW add to scene (this fires _ready)
+	get_tree().current_scene.add_child(spell_instance)
+	spell_instance.global_position = shoot_origin + shoot_dir * 3.0
+
+	print("🎯 Shooting toward ", shoot_dir)
