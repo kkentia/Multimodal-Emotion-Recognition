@@ -1,174 +1,336 @@
 extends CanvasLayer
 
-@onready var text_label = $DataHUD/VBoxContainer/NLP
-@onready var fer_label = $DataHUD/VBoxContainer/FER
-@onready var ser_label = $DataHUD/VBoxContainer/SER
-@onready var webcam_feed = $WebcamFeed
-@onready var opened_book = $OpenedBook
-@onready var settings = $Settings/settings
-@onready var tutorial = $tutorial
-@onready var player_health_bar =$PlayerHealthBar
-@onready var audio_stream = $"../AudioStreamPlayer2D"
-@onready var audio_check_button= $Settings/settings/TextureRect/AudioCheckButton
-@onready var crosshair = $Crosshair
-@onready var spellbook_btn = $SpellbookBtn
-@onready var casted_label = $CastedLabel
+@onready var data_box: VBoxContainer = $DataHUD/VBoxContainer
+@onready var ability_label: Label = $DataHUD/VBoxContainer/NLP
+@onready var fer_label: Label = $DataHUD/VBoxContainer/FER
+@onready var ser_label: Label = $DataHUD/VBoxContainer/SER
+@onready var webcam_feed: TextureRect = $WebcamFeed
+@onready var settings: CanvasItem = $Settings/settings
+@onready var player_health_bar: ProgressBar = $PlayerHealthBar
+@onready var audio_stream: AudioStreamPlayer2D = $"../AudioStreamPlayer2D"
+@onready var audio_check_button: CheckButton = $Settings/settings/TextureRect/AudioCheckButton
+@onready var crosshair: TextureRect = $Crosshair
+@onready var casted_label: Label = $CastedLabel
 
-# UDP listeners
-# := sets the variable type to whatever is on the other side of the equal sign
-var udp_data := PacketPeerUDP.new()
-var udp_video := PacketPeerUDP.new()
+const ABILITY_DISPLAY: Dictionary = {
+	"Fireball": "Solar Flare",
+	"Confusion": "Pulse Jammer",
+	"Healing": "Repair Wave",
+	"Ice Shard": "Cryo Burst",
+	"Lightning": "Plasma Arc",
+	"Shadow Drain": "Gravity Well",
+}
+
+var udp_data: PacketPeerUDP = PacketPeerUDP.new()
+var udp_video: PacketPeerUDP = PacketPeerUDP.new()
+var udp_data_bound: bool = false
+var udp_video_bound: bool = false
+
+var stt_label: Label
+var mode_label: Label
+var readiness_label: Label
+var score_label: Label
+var wave_label: Label
+var kills_label: Label
+var hint_label: Label
+var health_label: Label
+var cooldown_label: Label
+var fer_state_label: Label
+var ser_state_label: Label
+var stt_state_label: Label
+var transcript_label: Label
+var chain_label: Label
+var spellbook_panel: Panel
+var spellbook_box: VBoxContainer
 
 func _ready() -> void:
-	opened_book.visible= false
-	settings.visible=false
-	tutorial.visible=true
-	audio_check_button.button_pressed=true
+	_ensure_status_labels()
+	_ensure_spellbook_panel()
+	player_health_bar.max_value = 100
+	audio_check_button.button_pressed = true
+	_set_default_hud_state()
 	update_mouse_and_crosshair()
 
-	
-	
-	#listen to python script server (resnet_UI_godot_bridge.py)
-	udp_data.bind(4242)
-	udp_video.bind(4243)
+	var data_bind_result: int = udp_data.bind(4242)
+	var video_bind_result: int = udp_video.bind(4243)
+	udp_data_bound = data_bind_result == OK
+	udp_video_bound = video_bind_result == OK
+	if data_bind_result != OK:
+		push_warning("Failed to bind UDP data socket on port 4242")
+	if video_bind_result != OK:
+		push_warning("Failed to bind UDP video socket on port 4243")
 	print("Godot UDP Servers Started...")
-		
-	#udp_video.bind(4243)#audio
-	print("Godot UDP Servers Started...")
 
 
-
-func _process(_delta: float) -> void:  # fix the warning too
-	if udp_video.get_available_packet_count() > 0:
-		var packet = udp_video.get_packet()
-		print("Video packet received, size: ", packet.size())  # are packets arriving?
-		var img = Image.new()
-		var error = img.load_jpg_from_buffer(packet)
-		#print("Image load error code: ", error)  # is 0 (OK)?
+func _process(_delta: float) -> void:
+	if udp_video_bound and udp_video.get_available_packet_count() > 0:
+		var packet: PackedByteArray = udp_video.get_packet()
+		var img: Image = Image.new()
+		var error: int = img.load_jpg_from_buffer(packet)
 		if error == OK:
 			webcam_feed.texture = ImageTexture.create_from_image(img)
-			#print("Texture applied")  # is this reached?
 
-	# 2. RECEIVE JSON DATA
-	if udp_data.get_available_packet_count() > 0:
-		var packet = udp_data.get_packet()
-		var json_string = packet.get_string_from_utf8()
-		var dict = JSON.parse_string(json_string)
-		
-		if dict:
-			#send the received py data to the UI text update func
+	if udp_data_bound and udp_data.get_available_packet_count() > 0:
+		var packet: PackedByteArray = udp_data.get_packet()
+		var json_string: String = packet.get_string_from_utf8()
+		var payload: Variant = JSON.parse_string(json_string)
+		if payload is Dictionary:
+			var payload_dict: Dictionary = payload
+			var spoken_word: String = str(payload_dict.get("spoken_word", ""))
+			var transcript_text: String = str(payload_dict.get("transcript", ""))
 			update_ai_text(
-				dict["spell"], 
-				dict["face_emotion"], dict["face_confidence"], 
-				dict["speech_emotion"], dict["speech_confidence"]
+				str(payload_dict.get("spell", "")),
+				str(payload_dict.get("face_emotion", "unknown")),
+				float(payload_dict.get("face_confidence", 0.0)),
+				str(payload_dict.get("speech_emotion", "unknown")),
+				float(payload_dict.get("speech_confidence", 0.0)),
+				spoken_word,
+				transcript_text
 			)
-			
-			#send data up to Main Level to cast spell
-			if get_parent().has_method("process_ai_input"):
-				get_parent().process_ai_input(
-					dict["spell"], 
-					dict["face_emotion"], dict["face_confidence"], 
-					dict["speech_emotion"], dict["speech_confidence"]
+
+			var parent_node: Node = get_parent()
+			if parent_node != null and is_instance_valid(parent_node) and parent_node.has_method("process_ai_payload"):
+				parent_node.process_ai_payload(payload_dict)
+			elif parent_node != null and is_instance_valid(parent_node) and parent_node.has_method("process_ai_input"):
+				parent_node.process_ai_input(
+					spoken_word,
+					str(payload_dict.get("face_emotion", "unknown")),
+					float(payload_dict.get("face_confidence", 0.0)),
+					str(payload_dict.get("speech_emotion", "unknown")),
+					float(payload_dict.get("speech_confidence", 0.0))
 				)
-	
 
 	if Input.is_action_just_pressed("ui_cancel"):
-		# Priority order: close any open popup first
-		if settings.visible:
-			settings.visible = false
-		elif opened_book.visible:
-			opened_book.visible = false
-		elif tutorial.visible:
-			tutorial.visible = false
-		else:
-			# No popups open → open settings
-			settings.visible = true
+		settings.visible = not settings.visible
 		update_mouse_and_crosshair()
-	# E key — toggle spellbook
 	if Input.is_action_just_pressed("toggle_spellbook"):
-		spellbook_btn.button_pressed = not spellbook_btn.button_pressed
-		opened_book.visible = spellbook_btn.button_pressed
-		update_mouse_and_crosshair()
-		
-func update_ai_text(spell: String, fer_emo: String, fer_prob:float, ser_emo: String, ser_prob:float):
-		# if no keyword, infer the held spell name frmo the emotion combo
-	var display_spell= spell
-	if spell == "" or spell=="none":
-		display_spell=get_spell_name_from_emotions(fer_emo,ser_emo)
-	
-	text_label.text = "Spell: " + str(display_spell)
-	fer_label.text= "Face: " +fer_emo.capitalize() + " " + str(int(fer_prob *100)) + "%"
-	ser_label.text= "Voice: " +ser_emo.capitalize() + " " + str(int(ser_prob *100)) + "%"
-
-func get_spell_name_from_emotions(fer:String, ser:String) ->String:
-	fer = fer.to_lower()
-	ser=ser.to_lower()
-	
-	if fer == "angry" and ser == "angry": return "Fireball (say 'Ignite')"
-	elif fer == "happy" and ser == "angry": return "Confusion (say 'Baffle')"
-	elif fer == "happy" and ser == "happy": return "Healing (say 'Restore')"
-	elif fer == "sad" and ser == "fear": return "Ice Shard (say 'Freeze')"
-	elif fer == "fear" and ser == "angry": return "Lightning (say 'Strike')"
-	elif fer == "sad" and ser == "sad": return "Shadow Drain (say 'Drain')"
-	else: return "—"
+		_toggle_spellbook_panel()
 
 
-func update_player_health(current_health:int):
-	player_health_bar.value=current_health
+func update_ai_text(spell_name: String, fer_emo: String, fer_prob: float, ser_emo: String, ser_prob: float, spoken_word: String = "", transcript_text: String = "") -> void:
+	var display_ability: String = format_ability_name(spell_name)
+	if spell_name == "" or spell_name == "none":
+		display_ability = get_ability_name_from_emotions(fer_emo, ser_emo)
+
+	ability_label.text = "Ability: %s" % display_ability
+	fer_label.text = "FER: %s %d%%" % [fer_emo.capitalize(), int(clamp(fer_prob, 0.0, 1.0) * 100.0)]
+	ser_label.text = "SER: %s %d%%" % [ser_emo.capitalize(), int(clamp(ser_prob, 0.0, 1.0) * 100.0)]
+	stt_label.text = "STT Cue: %s" % (spoken_word if spoken_word != "" else "waiting")
+	transcript_label.text = "Transcript: %s" % (transcript_text if transcript_text != "" else "...")
 
 
+func update_metrics(current_health: int, max_health: int, score: int, wave: int, kills: int, mode_name: String, cast_chain: int = 0) -> void:
+	player_health_bar.max_value = max_health
+	player_health_bar.value = current_health
+	health_label.text = "Health: %d / %d" % [current_health, max_health]
+	score_label.text = "Score: %d" % score
+	wave_label.text = "Wave: %d" % wave
+	kills_label.text = "Kills: %d" % kills
+	mode_label.text = "Mode: %s | M mode | E spellbook" % mode_name
+	chain_label.text = "Spell Chain: x%d" % cast_chain
 
-func update_mouse_and_crosshair():
-	# Check if any popup is open
-	var any_popup_open = settings.visible or opened_book.visible or tutorial.visible
-	
+
+func update_cooldown(seconds_remaining: float) -> void:
+	if seconds_remaining <= 0.0:
+		cooldown_label.text = "Cooldown: Ready"
+	else:
+		cooldown_label.text = "Cooldown: %.1fs" % seconds_remaining
+
+
+func update_readiness(fer_ready: bool, ser_ready: bool, stt_ready: bool, ready_to_fire: bool, ability_name: String, spoken_word: String, expected_keyword: String = "", mode_name: String = "") -> void:
+	var status_parts: Array[String] = [
+		"FER %s" % _flag_text(fer_ready),
+		"SER %s" % _flag_text(ser_ready),
+		"STT %s" % _flag_text(stt_ready)
+	]
+	readiness_label.text = "Ready: %s" % " | ".join(status_parts)
+	fer_state_label.text = _indicator_text("FER", fer_ready)
+	ser_state_label.text = _indicator_text("SER", ser_ready)
+	stt_state_label.text = _indicator_text("STT", stt_ready)
+
+	var detail: String = "No spellbook match yet"
+	if ability_name != "":
+		detail = "%s armed" % format_ability_name(ability_name)
+		if expected_keyword != "" and not ready_to_fire and mode_name != "Manual":
+			detail = "%s armed | say '%s'" % [format_ability_name(ability_name), expected_keyword]
+	elif spoken_word != "" and spoken_word != "manual":
+		detail = "No spellbook match for '%s'" % spoken_word
+	if spoken_word == "manual":
+		detail = "%s armed | LMB fire | F cycle" % format_ability_name(ability_name)
+	if ready_to_fire:
+		if mode_name == "Manual":
+			detail = "%s manual override active" % format_ability_name(ability_name)
+		elif expected_keyword != "":
+			detail = "%s ready via '%s'" % [format_ability_name(ability_name), expected_keyword]
+		else:
+			detail = "%s ready" % format_ability_name(ability_name)
+	hint_label.text = detail
+
+
+func show_casted_message(spell_name: String) -> void:
+	casted_label.text = "%s ACTIVATED" % format_ability_name(spell_name).to_upper()
+	casted_label.visible = true
+	casted_label.scale = Vector2(0.5, 0.5)
+	var tween: Tween = create_tween()
+	tween.tween_property(casted_label, "scale", Vector2(1.2, 1.2), 0.2)
+	tween.tween_property(casted_label, "scale", Vector2(1.0, 1.0), 0.1)
+	await get_tree().create_timer(1.5).timeout
+	var fade_tween: Tween = create_tween()
+	fade_tween.tween_property(casted_label, "modulate:a", 0.0, 0.3)
+	await fade_tween.finished
+	casted_label.visible = false
+	casted_label.modulate.a = 1.0
+
+
+func show_status_message(text: String, color: Color = Color.WHITE) -> void:
+	casted_label.text = text
+	casted_label.modulate = color
+	casted_label.visible = true
+	casted_label.scale = Vector2(0.8, 0.8)
+	var tween: Tween = create_tween()
+	tween.tween_property(casted_label, "scale", Vector2(1.0, 1.0), 0.12)
+	await get_tree().create_timer(0.9).timeout
+	var fade_tween: Tween = create_tween()
+	fade_tween.tween_property(casted_label, "modulate:a", 0.0, 0.2)
+	await fade_tween.finished
+	casted_label.visible = false
+	casted_label.modulate = Color.WHITE
+
+
+func update_spellbook(entries: Array[Dictionary]) -> void:
+	_ensure_spellbook_panel()
+	for child in spellbook_box.get_children():
+		child.queue_free()
+
+	var title: Label = Label.new()
+	title.text = "Cosmic Spellbook"
+	spellbook_box.add_child(title)
+
+	for entry in entries:
+		var line: Label = Label.new()
+		line.text = "%s | Face: %s | Voice: %s | Say: %s" % [
+			str(entry.get("display_name", "")),
+			str(entry.get("face", "")),
+			str(entry.get("voice", "")),
+			str(entry.get("keyword", "")),
+		]
+		spellbook_box.add_child(line)
+
+
+func update_mouse_and_crosshair() -> void:
+	var any_popup_open: bool = settings.visible
 	if any_popup_open:
-		# Show mouse cursor for clicking buttons, hide crosshair
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		crosshair.visible = false
 	else:
-		# Hide cursor (captured for FPS look), show aim crosshair
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 		crosshair.visible = true
 
 
+func format_ability_name(name: String) -> String:
+	return str(ABILITY_DISPLAY.get(name, name))
 
 
+func get_ability_name_from_emotions(fer: String, ser: String) -> String:
+	fer = fer.to_lower()
+	ser = ser.to_lower()
 
-func show_casted_message(spell_name: String):
-	casted_label.text = spell_name.to_upper() + " CASTED!"
-	casted_label.visible = true
-		
-		# Optional: scale-up animation
-	casted_label.scale = Vector2(0.5, 0.5)
-	var tween = create_tween()
-	tween.tween_property(casted_label, "scale", Vector2(1.2, 1.2), 0.2)
-	tween.tween_property(casted_label, "scale", Vector2(1.0, 1.0), 0.1)
-		
-		# Hide after 1.5 seconds
-	await get_tree().create_timer(1.5).timeout
-		
-		# Fade out
-	var fade_tween = create_tween()
-	fade_tween.tween_property(casted_label, "modulate:a", 0.0, 0.3)
-	await fade_tween.finished
-	
-	casted_label.visible = false
-	casted_label.modulate.a = 1.0   # reset for next time
-	
-	
-func _on_spellbook_btn_pressed() -> void:
-	opened_book.visible = not opened_book.visible
-	update_mouse_and_crosshair()
-	
+	if fer == "angry" and ser == "angry":
+		return "Solar Flare"
+	elif fer == "happy" and ser == "angry":
+		return "Pulse Jammer"
+	elif fer == "happy" and ser == "happy":
+		return "Repair Wave"
+	elif fer == "sad" and ser == "fear":
+		return "Cryo Burst"
+	elif fer == "fear" and ser == "angry":
+		return "Plasma Arc"
+	elif fer == "sad" and ser == "sad":
+		return "Gravity Well"
+	return "—"
+
+
+func _ensure_status_labels() -> void:
+	health_label = _ensure_label("Health")
+	stt_label = _ensure_label("STT")
+	transcript_label = _ensure_label("Transcript")
+	mode_label = _ensure_label("Mode")
+	readiness_label = _ensure_label("Readiness")
+	score_label = _ensure_label("Score")
+	wave_label = _ensure_label("Wave")
+	kills_label = _ensure_label("Kills")
+	hint_label = _ensure_label("Hint")
+	cooldown_label = _ensure_label("Cooldown")
+	fer_state_label = _ensure_label("FERState")
+	ser_state_label = _ensure_label("SERState")
+	stt_state_label = _ensure_label("STTState")
+	chain_label = _ensure_label("SpellChain")
+
+
+func _ensure_label(node_name: String) -> Label:
+	var label: Label = data_box.get_node_or_null(node_name) as Label
+	if label == null:
+		label = Label.new()
+		label.name = node_name
+		data_box.add_child(label)
+	return label
+
+
+func _ensure_spellbook_panel() -> void:
+	if spellbook_panel != null:
+		return
+
+	spellbook_panel = Panel.new()
+	spellbook_panel.name = "SpellbookPanel"
+	spellbook_panel.visible = false
+	spellbook_panel.offset_left = 860.0
+	spellbook_panel.offset_top = 90.0
+	spellbook_panel.offset_right = 1260.0
+	spellbook_panel.offset_bottom = 360.0
+	add_child(spellbook_panel)
+
+	spellbook_box = VBoxContainer.new()
+	spellbook_box.name = "VBoxContainer"
+	spellbook_box.offset_left = 12.0
+	spellbook_box.offset_top = 12.0
+	spellbook_box.offset_right = 388.0
+	spellbook_box.offset_bottom = 258.0
+	spellbook_panel.add_child(spellbook_box)
+
+
+func _set_default_hud_state() -> void:
+	update_ai_text("", "unknown", 0.0, "unknown", 0.0, "")
+	update_metrics(100, 100, 0, 0, 0, "FER+SER+STT")
+	update_readiness(false, false, false, false, "", "")
+	update_cooldown(0.0)
+	settings.visible = false
+
+
+func _exit_tree() -> void:
+	udp_data.close()
+	udp_video.close()
+
+
+func _flag_text(state: bool) -> String:
+	return "OK" if state else "--"
+
+
+func _indicator_text(label_name: String, active: bool) -> String:
+	return "%s: %s" % [label_name, "ON" if active else "OFF"]
+
+
+func _toggle_spellbook_panel() -> void:
+	_ensure_spellbook_panel()
+	spellbook_panel.visible = not spellbook_panel.visible
+
+
 func _on_settings_pressed() -> void:
 	settings.visible = not settings.visible
-	print("Settings toggled!")
 	update_mouse_and_crosshair()
 
+
 func _on_close_btn_pressed() -> void:
-	settings.visible= false
-	tutorial.visible=false
+	settings.visible = false
 	update_mouse_and_crosshair()
 
 
@@ -176,18 +338,5 @@ func _on_exit_game_pressed() -> void:
 	get_tree().change_scene_to_file("res://Scences/StartScreen.tscn")
 
 
-func _on_open_tutorial_pressed() -> void:
-	tutorial.visible=true
-	update_mouse_and_crosshair()
-
-
 func _on_check_button_toggled(toggled_on: bool) -> void:
-	if toggled_on:
-		audio_stream.volume_db= 0 #unmute
-	else: audio_stream.volume_db=-100 ##not audible to human ear
-	
-	
-	
-
-
-	
+	audio_stream.volume_db = 0 if toggled_on else -100

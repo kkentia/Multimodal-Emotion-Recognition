@@ -1,10 +1,6 @@
 [gd_scene format=3 uid="uid://t67hw7bgruuh"]
 
-[ext_resource type="Texture2D" uid="uid://bx3x4xodrqbgq" path="res://Assets/Sprites/closedBook.png" id="1_1qoxe"]
-[ext_resource type="Script" uid="uid://bijc5155n0gxa" path="res://Scripts/ui.gd" id="1_varqg"]
-[ext_resource type="Texture2D" uid="uid://buo8usnwl23yv" path="res://Assets/Sprites/closed_book.png" id="2_jigfe"]
-[ext_resource type="Texture2D" uid="uid://tyeq3lym2l6" path="res://Assets/Sprites/WhatsApp Image 2026-03-13 at 14.45.27.jpeg" id="3_2ydy1"]
-[ext_resource type="Texture2D" uid="uid://yeuntht3m84u" path="res://Assets/Sprites/tutorial.png" id="5_2ydy1"]
+[ext_resource type="Script" uid="uid://fu11c5faguxt" path="res://Scripts/ui.gd" id="1_varqg"]
 [ext_resource type="FontFile" uid="uid://cfgp6j8ahhu8j" path="res://Assets/Fonts/bucheri-demo/BucheriDEMO-Regular.otf" id="6_varqg"]
 [ext_resource type="Texture2D" uid="uid://ci6cquxcyvskm" path="res://Assets/Sprites/crosshair.png" id="8_335ti"]
 [ext_resource type="Texture2D" uid="uid://7lhuynp5sfy8" path="res://Assets/Sprites/settings.png" id="8_xfvjy"]
@@ -36,8 +32,8 @@ stretch_mode = 5
 [node name="DataHUD" type="Panel" parent="." unique_id=2008427267]
 offset_left = 10.0
 offset_top = 225.0
-offset_right = 304.0
-offset_bottom = 469.0
+offset_right = 340.0
+offset_bottom = 620.0
 mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="DataHUD" unique_id=820276242]
@@ -53,92 +49,6 @@ layout_mode = 2
 
 [node name="SER" type="Label" parent="DataHUD/VBoxContainer" unique_id=501853307]
 layout_mode = 2
-
-[node name="SpellbookBtn" type="TextureButton" parent="." unique_id=280788790]
-offset_left = 3.0
-offset_top = 544.0
-offset_right = 161.0
-offset_bottom = 714.0
-toggle_mode = true
-texture_normal = ExtResource("1_1qoxe")
-texture_pressed = ExtResource("2_jigfe")
-texture_focused = ExtResource("2_jigfe")
-ignore_texture_size = true
-stretch_mode = 0
-
-[node name="OpenedBook" type="TextureRect" parent="." unique_id=1104542033]
-offset_left = 383.0
-offset_top = 170.0
-offset_right = 903.0
-offset_bottom = 530.0
-texture = ExtResource("3_2ydy1")
-expand_mode = 1
-
-[node name="Label" type="Label" parent="OpenedBook" unique_id=1598924289]
-layout_mode = 0
-offset_left = 45.0
-offset_top = 85.0
-offset_right = 457.0
-offset_bottom = 130.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_fonts/font = ExtResource("6_varqg")
-text = "- Fireball:     say 'Ignite'  --> Face: Angry   | Voice: Angry
-- Confusion:    say 'Baffle'  --> Face: Happy   | Voice: Angry
-- Healing:      say 'Restore' --> Face: Happy   | Voice: Happy
-- Ice Shard:    say 'Freeze'  --> Face: Sad     | Voice: Fear
-- Lightning:    say 'Strike'  --> Face: Fear | Voice: Angry
-- Shadow Drain: say 'Drain'   --> Face: Sad     | Voice: Sad"
-
-[node name="openTutorial" type="Button" parent="OpenedBook" unique_id=1902091896]
-layout_mode = 0
-offset_left = 322.0
-offset_top = 303.0
-offset_right = 455.0
-offset_bottom = 334.0
-text = "See Instructions"
-
-[node name="tutorial" type="ColorRect" parent="." unique_id=112637210]
-offset_left = -2.0
-offset_top = 2.0
-offset_right = 1293.0
-offset_bottom = 726.0
-color = Color(0, 0, 0, 0.28627452)
-
-[node name="TextureRect" type="TextureRect" parent="tutorial" unique_id=2138072898]
-layout_mode = 0
-offset_left = 355.0
-offset_top = 45.0
-offset_right = 951.0
-offset_bottom = 635.0
-texture = ExtResource("5_2ydy1")
-
-[node name="Label" type="Label" parent="tutorial/TextureRect" unique_id=859427288]
-layout_mode = 0
-offset_left = 114.0
-offset_top = 151.0
-offset_right = 470.0
-offset_bottom = 316.0
-theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
-theme_override_fonts/font = ExtResource("6_varqg")
-text = "- Fake your emotions to cast spells!
-
-- Press Space to Jump from a Planet to Another
-
--Save your home planet system from Meteorites and Aliens!
-
-"
-
-[node name="CloseBtn" type="Button" parent="tutorial/TextureRect" unique_id=770232922]
-layout_mode = 0
-offset_left = 422.0
-offset_top = 44.0
-offset_right = 484.0
-offset_bottom = 117.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_fonts/font = ExtResource("6_varqg")
-theme_override_font_sizes/font_size = 50
-text = "X"
-flat = true
 
 [node name="Settings" type="Button" parent="." unique_id=1293735417]
 offset_left = 1200.0
@@ -163,7 +73,6 @@ offset_left = 363.0
 offset_top = 54.0
 offset_right = 959.0
 offset_bottom = 644.0
-texture = ExtResource("5_2ydy1")
 
 [node name="CloseBtn" type="Button" parent="Settings/settings/TextureRect" unique_id=1599084933]
 layout_mode = 0
@@ -242,12 +151,8 @@ offset_right = -509.0
 offset_bottom = 100.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 64
-text = "CASTED!"
+text = "ACTIVATED"
 
-[connection signal="pressed" from="SpellbookBtn" to="." method="_on_spellbook_btn_pressed"]
-[connection signal="toggled" from="SpellbookBtn" to="." method="_on_spellbook_btn_toggled"]
-[connection signal="pressed" from="OpenedBook/openTutorial" to="." method="_on_open_tutorial_pressed"]
-[connection signal="pressed" from="tutorial/TextureRect/CloseBtn" to="." method="_on_close_btn_pressed"]
 [connection signal="pressed" from="Settings" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="Settings/settings/TextureRect/CloseBtn" to="." method="_on_close_btn_pressed"]
 [connection signal="pressed" from="Settings/settings/TextureRect/ExitGame" to="." method="_on_exit_game_pressed"]
