@@ -11,6 +11,7 @@ func _process(delta):
 		return                # held in hand → don't move
 	
 	global_position += velocity_dir * speed * delta
+	
 	lifetime -= delta
 	if lifetime <= 0:
 		queue_free()

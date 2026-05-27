@@ -119,22 +119,22 @@ func cast_spell(spoken_keyword: String):
 	held_spell_name = ""
 
 	var cam = get_viewport().get_camera_3d()
-
 	if not cam:
 		print("no acive pov found")
 		return
 		
-	# DEBUG: print the raw global transform
-	print("CAM global_transform.basis.z = ", cam.global_transform.basis.z)
-	print("CAM global rotation = ", cam.global_rotation)
-	print("CAM is current? ", cam.current, "  name: ", cam.name)
 	# Grab camera's CURRENT forward direction and position RIGHT NOW
 	var cam_transform = cam.global_transform
 	var shoot_dir = -cam_transform.basis.z      # camera forward
 	var shoot_origin = cam_transform.origin     # camera position
 
-# Reparent so it flies freely in space
-	spell_instance.get_parent().remove_child(spell_instance)
+
+	# Detach from hand and attach to scene root, KEEPING world position
+	var scene_root = get_tree().current_scene
+	# Reparent so it flies freely in space
+	spell_instance.reparent(scene_root,true)
+	print("🔗 Spell parent is now: ", spell_instance.get_parent().name)
+
 
 	# SET DIRECTION FIRST (before add_child triggers _ready)
 	spell_instance.velocity_dir = shoot_dir
@@ -143,7 +143,6 @@ func cast_spell(spoken_keyword: String):
 	spell_instance.lifetime = 6.0
 	spell_instance.launched=true
 
-	# NOW add to scene (this fires _ready)
 	get_tree().current_scene.add_child(spell_instance)
 	spell_instance.global_position = shoot_origin + shoot_dir * 3.0
 
