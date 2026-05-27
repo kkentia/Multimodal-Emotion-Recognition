@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://boyl613i2ekb6"
-path.s3tc="res://.godot/imported/level1night.jpg-bb6788dfd85a2cddd95c19f9e2126579.s3tc.ctex"
+uid="uid://dvftutfsfpj26"
+path.s3tc="res://.godot/imported/level2night.png-9ad37cd2a70637f896c5fa111cf88b5c.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://Assets/Sprites/level1night.jpg"
-dest_files=["res://.godot/imported/level1night.jpg-bb6788dfd85a2cddd95c19f9e2126579.s3tc.ctex"]
+source_file="res://Assets/Sprites/level2night.png"
+dest_files=["res://.godot/imported/level2night.png-9ad37cd2a70637f896c5fa111cf88b5c.s3tc.ctex"]
 
 [params]
 

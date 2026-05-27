@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://dgicap46jdhm2"]
+
+[ext_resource type="Script" uid="uid://dq6mqmjmbug6e" path="res://Scripts/3d/spell_projectile.gd" id="1_80wen"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5vf37"]
+albedo_color = Color(0, 0, 0, 1)
+emission_enabled = true
+emission_energy_multiplier = 3.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_36jxs"]
+albedo_color = Color(0.15, 0.0, 0.25, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_uxabk"]
+material = SubResource("StandardMaterial3D_36jxs")
+radius = 0.15
+height = 0.3
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ognoa"]
+radius = 0.2
+
+[node name="Spell" type="Node3D" unique_id=1181115170]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+script = ExtResource("1_80wen")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1472063018]
+material_override = SubResource("StandardMaterial3D_5vf37")
+mesh = SubResource("SphereMesh_uxabk")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1467787326]
+light_color = Color(0.45, 0.1, 0.65, 1)
+light_energy = 4.0
+
+[node name="Area3D" type="Area3D" parent="." unique_id=1555847708]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=554149081]
+shape = SubResource("SphereShape3D_ognoa")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_shadow"]
+direction = Vector3(0, 1, 0)
+spread = 30.0
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 0.8
+initial_velocity_max = 2.0
+scale_min = 0.05
+scale_max = 0.18
+color = Color(0.4, 0.0, 0.6, 0.9)
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="." unique_id=1400646830]
+amount = 25
+lifetime = 0.6
+process_material = SubResource("ParticleProcessMaterial_shadow")

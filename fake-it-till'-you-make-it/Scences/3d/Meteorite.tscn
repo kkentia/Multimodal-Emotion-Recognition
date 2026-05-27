@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://bisoj4ffnby44"]
+
+[ext_resource type="Script" path="res://Scripts/3d/meteorite.gd" id="1_nftrp"]
+[ext_resource type="Texture2D" uid="uid://boyl613i2ekb6" path="res://Assets/Sprites/level1night.jpg" id="2_nftrp"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_muqbh"]
+load_path = "res://.godot/imported/Ground037_1K-PNG_AmbientOcclusion.png-e7c48dedae1ca2a37046969383d0faf8.s3tc.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_vyyce"]
+load_path = "res://.godot/imported/Ground037_1K-PNG_Displacement.png-d98a34852fb357f682ee90bdfadf4e28.s3tc.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_0sid5"]
+load_path = "res://.godot/imported/Ground037_1K-PNG_NormalGL.png-5d7aa002392eb942ca699821bf3d212d.s3tc.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_lmdjr"]
+load_path = "res://.godot/imported/Ground037_1K-PNG_Roughness.png-a383c00006b3732dc3a817699577341f.s3tc.ctex"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8b6bg"]
+albedo_texture = ExtResource("2_nftrp")
+roughness_texture = SubResource("CompressedTexture2D_lmdjr")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_texture = SubResource("CompressedTexture2D_0sid5")
+ao_enabled = true
+ao_texture = SubResource("CompressedTexture2D_muqbh")
+ao_texture_channel = 4
+heightmap_enabled = true
+heightmap_scale = 1.0
+heightmap_texture = SubResource("CompressedTexture2D_vyyce")
+
+[sub_resource type="SphereMesh" id="SphereMesh_e7qp4"]
+material = SubResource("StandardMaterial3D_8b6bg")
+radius = 100.0
+height = 200.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_0sid5"]
+radius = 100.0
+
+[node name="Meteorite" type="CharacterBody3D" unique_id=1088401638]
+script = ExtResource("1_nftrp")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1755703498]
+mesh = SubResource("SphereMesh_e7qp4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=170253161]
+shape = SubResource("SphereShape3D_0sid5")

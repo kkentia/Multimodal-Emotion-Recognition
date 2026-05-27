@@ -2,20 +2,20 @@
 
 [ext_resource type="Texture2D" uid="uid://cov5f7k32htc5" path="res://Assets/Map/HDR_blue_nebulae_3.hdr" id="1_e5wd5"]
 [ext_resource type="Script" uid="uid://uft81hvnk1gf" path="res://Scripts/3d/main_3d.gd" id="1_rem25"]
-[ext_resource type="Material" uid="uid://bdqs1b7jn0bop" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG.tres" id="2_as664"]
 [ext_resource type="Script" uid="uid://lef5qvnsl3ab" path="res://Scripts/3d/player.gd" id="3_4kx6a"]
 [ext_resource type="AudioStream" uid="uid://mxbngaepiv3r" path="res://Assets/Audio/assets_audio_jump_sound.wav" id="3_e5wd5"]
 [ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="4_1fybv"]
 [ext_resource type="Script" uid="uid://bceqhwcb30310" path="res://Scripts/3d/spell_manager.gd" id="4_yy2vc"]
 [ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="5_hxy3m"]
 [ext_resource type="Texture2D" uid="uid://b7wn5r02542xp" path="res://Assets/Textures/2k_mercury.jpg" id="7_mpsoo"]
+[ext_resource type="Texture2D" uid="uid://dfxchdai31i7n" path="res://Assets/Textures/2k_jupiter.jpg" id="8_avmwb"]
 [ext_resource type="Texture2D" uid="uid://pburc1rstrdc" path="res://Assets/Textures/2k_earth_daymap.jpg" id="8_yy2vc"]
 [ext_resource type="Texture2D" uid="uid://didprewd1suif" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_AmbientOcclusion.png" id="9_0ijpo"]
 [ext_resource type="Texture2D" uid="uid://mb4x3wbs0bju" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Displacement.png" id="10_rem25"]
 [ext_resource type="Texture2D" uid="uid://dp366s5ay5ptt" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_NormalGL.png" id="11_avmwb"]
 [ext_resource type="Texture2D" uid="uid://cdvv8isbq8v0j" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Roughness.png" id="12_ohq7n"]
-[ext_resource type="Script" path="res://Scripts/3d/meteorite_spawner.gd" id="15_rem25"]
-[ext_resource type="PackedScene" uid="uid://bisoj4ffnby44" path="res://Scences/3d/Meteorite.tscn" id="16_avmwb"]
+[ext_resource type="Script" uid="uid://2exiy0sqr2il" path="res://Scripts/3d/meteorite_spawner.gd" id="15_rem25"]
+[ext_resource type="PackedScene" uid="uid://dkk3sq14fijbd" path="res://Scences/3d/Meteorite.tscn" id="16_avmwb"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_kdf6n"]
 panorama = ExtResource("1_e5wd5")
@@ -35,8 +35,33 @@ reflected_light_source = 2
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b307k"]
 
-[sub_resource type="SphereMesh" id="SphereMesh_5qjsa"]
-material = ExtResource("2_as664")
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ohq7n"]
+load_path = "res://.godot/imported/Ground037_1K-PNG_AmbientOcclusion.png-e7c48dedae1ca2a37046969383d0faf8.s3tc.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_5qjsa"]
+load_path = "res://.godot/imported/Ground037_1K-PNG_Displacement.png-d98a34852fb357f682ee90bdfadf4e28.s3tc.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_xn8me"]
+load_path = "res://.godot/imported/Ground037_1K-PNG_NormalGL.png-5d7aa002392eb942ca699821bf3d212d.s3tc.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_50ats"]
+load_path = "res://.godot/imported/Ground037_1K-PNG_Roughness.png-a383c00006b3732dc3a817699577341f.s3tc.ctex"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pibm3"]
+albedo_texture = ExtResource("8_avmwb")
+roughness_texture = SubResource("CompressedTexture2D_50ats")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_texture = SubResource("CompressedTexture2D_xn8me")
+ao_enabled = true
+ao_texture = SubResource("CompressedTexture2D_ohq7n")
+ao_texture_channel = 4
+heightmap_enabled = true
+heightmap_scale = 1.0
+heightmap_texture = SubResource("CompressedTexture2D_5qjsa")
+
+[sub_resource type="SphereMesh" id="SphereMesh_wp02q"]
+material = SubResource("StandardMaterial3D_pibm3")
 radius = 200.0
 height = 400.0
 radial_segments = 96
@@ -144,7 +169,7 @@ autoplay = true
 [node name="Planet" type="StaticBody3D" parent="." unique_id=1805927758 groups=["Planets"]]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Planet" unique_id=447065959]
-mesh = SubResource("SphereMesh_5qjsa")
+mesh = SubResource("SphereMesh_wp02q")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Planet" unique_id=364714563]
 shape = SubResource("SphereShape3D_e5wd5")
@@ -176,6 +201,6 @@ mesh = SubResource("SphereMesh_vpcyp")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Planet4" unique_id=2072161529]
 shape = SubResource("SphereShape3D_e5wd5")
 
-[node name="MeteoriteSpawner" type="Node3D" parent="." unique_id=513905317]
+[node name="MeteoriteSpawner" type="Node3D" parent="." unique_id=72076]
 script = ExtResource("15_rem25")
 meteorite_scene = ExtResource("16_avmwb")

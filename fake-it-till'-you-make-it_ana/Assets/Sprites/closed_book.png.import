@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://boyl613i2ekb6"
-path.s3tc="res://.godot/imported/level1night.jpg-bb6788dfd85a2cddd95c19f9e2126579.s3tc.ctex"
+uid="uid://buo8usnwl23yv"
+path.s3tc="res://.godot/imported/closed_book.png-fcc7e51505d7dc9ea546bec3e97c449a.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://Assets/Sprites/level1night.jpg"
-dest_files=["res://.godot/imported/level1night.jpg-bb6788dfd85a2cddd95c19f9e2126579.s3tc.ctex"]
+source_file="res://Assets/Sprites/closed_book.png"
+dest_files=["res://.godot/imported/closed_book.png-fcc7e51505d7dc9ea546bec3e97c449a.s3tc.ctex"]
 
 [params]
 

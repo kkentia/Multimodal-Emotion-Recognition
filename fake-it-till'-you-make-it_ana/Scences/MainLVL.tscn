@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://dxomyuberu6j2"]
+
+[ext_resource type="Script" uid="uid://d27q1jieeciy0" path="res://Scripts/main_lvl.gd" id="1_y8r8y"]
+[ext_resource type="PackedScene" uid="uid://c513305fso2k3" path="res://Scences/Enemy.tscn" id="2_er1sx"]
+[ext_resource type="Texture2D" uid="uid://boyl613i2ekb6" path="res://Assets/Sprites/level1night.jpg" id="2_n0bbk"]
+[ext_resource type="Texture2D" uid="uid://bkmbmvvmmcgao" path="res://Assets/Sprites/foregroundNight.png" id="3_1dgwv"]
+[ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="5_otse2"]
+[ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="6_n0bbk"]
+[ext_resource type="FontFile" uid="uid://cfgp6j8ahhu8j" path="res://Assets/Fonts/bucheri-demo/BucheriDEMO-Regular.otf" id="7_2r8x1"]
+[ext_resource type="PackedScene" uid="uid://b8cqfcc1cwkm1" path="res://Scences/Enemy2.tscn" id="8_yfbnl"]
+
+[node name="MainLvl" type="Node2D" unique_id=534353231]
+script = ExtResource("1_y8r8y")
+
+[node name="Background" type="Sprite2D" parent="." unique_id=2124034026]
+visible = false
+position = Vector2(650.5, 364.5)
+scale = Vector2(0.54788136, 0.44695124)
+texture = ExtResource("2_n0bbk")
+
+[node name="Enemy" parent="." unique_id=450527774 instance=ExtResource("2_er1sx")]
+visible = false
+position = Vector2(640, 426)
+scale = Vector2(0.39, 0.39)
+
+[node name="foreground" type="Sprite2D" parent="." unique_id=1471897837]
+visible = false
+position = Vector2(652.5, 386.50003)
+scale = Vector2(0.5572034, 0.45426834)
+texture = ExtResource("3_1dgwv")
+
+[node name="UI" parent="." unique_id=1263911513 instance=ExtResource("5_otse2")]
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=702303410]
+stream = ExtResource("6_n0bbk")
+autoplay = true
+
+[node name="you_won" type="Label" parent="." unique_id=1023757549]
+offset_left = 516.0
+offset_top = 138.0
+offset_right = 759.0
+offset_bottom = 243.0
+theme_override_fonts/font = ExtResource("7_2r8x1")
+theme_override_font_sizes/font_size = 50
+text = "YOU WON! "
+
+[node name="spell_label" type="Label" parent="." unique_id=1023757551]
+offset_left = 380.0
+offset_top = 280.0
+offset_right = 780.0
+offset_bottom = 360.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("7_2r8x1")
+theme_override_font_sizes/font_size = 40
+
+[node name="game_over" type="Label" parent="." unique_id=1023757550]
+offset_left = 489.0
+offset_top = 139.0
+offset_right = 839.0
+offset_bottom = 244.0
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_fonts/font = ExtResource("7_2r8x1")
+theme_override_font_sizes/font_size = 50
+text = "GAME OVER!"
+
+[node name="Enemy2" parent="." unique_id=423189580 instance=ExtResource("8_yfbnl")]
+position = Vector2(640, 426)
+scale = Vector2(0.39, 0.39)
+
+[node name="Enemy3" parent="." unique_id=423189581 instance=ExtResource("8_yfbnl")]
+position = Vector2(640, 426)
+scale = Vector2(0.39, 0.39)
+
+[connection signal="finished" from="AudioStreamPlayer2D" to="." method="_on_audio_stream_player_2d_finished"]
