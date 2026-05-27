@@ -1,5 +1,7 @@
 extends Node3D
 
+const MIN_PROJECTILE_RANGE: float = 1800.0
+
 var velocity_dir: Vector3 = Vector3.FORWARD
 var speed: float = 20.0
 var damage: int = 10
@@ -8,6 +10,7 @@ var spell_name: String = ""
 var display_name: String = ""
 var display_color: Color = Color.WHITE
 var base_visual_scale: Vector3 = Vector3.ONE
+var has_impacted: bool = false
 
 @onready var mesh: MeshInstance3D = $MeshInstance3D
 @onready var light: OmniLight3D = $OmniLight3D
@@ -36,7 +39,7 @@ func configure_projectile(new_spell_name: String, new_display_name: String, new_
 	display_color = new_color
 	speed = new_speed
 	damage = new_damage
-	lifetime = 6.0
+	lifetime = max(6.0, MIN_PROJECTILE_RANGE / max(speed, 1.0))
 	if direction != Vector3.ZERO:
 		velocity_dir = direction.normalized()
 	_apply_visual_style()
@@ -50,7 +53,11 @@ func configure_visuals(new_spell_name: String, new_display_name: String, new_col
 
 
 func _physics_process(delta: float) -> void:
-	global_position += velocity_dir * speed * delta
+	var next_position: Vector3 = global_position + velocity_dir * speed * delta
+	_try_hit_between(global_position, next_position)
+	if has_impacted:
+		return
+	global_position = next_position
 	rotate_y(delta * 5.0)
 	lifetime -= delta
 	if lifetime <= 0.0:
@@ -81,20 +88,59 @@ func _expand_hitbox() -> void:
 
 
 func _on_area_3d_body_entered(body: Node) -> void:
-	if body.has_method("take_damage"):
-		_spawn_impact_burst()
-		body.take_damage(damage)
-		queue_free()
+	if has_impacted:
+		return
+	_try_damage_target(body)
 
 
 func _on_area_3d_area_entered(hit_area: Area3D) -> void:
+	if has_impacted:
+		return
 	if hit_area == null or not is_instance_valid(hit_area):
 		return
-	var owner: Node = hit_area.get_parent()
-	if owner and owner.has_method("take_damage"):
+	_try_damage_target(hit_area)
+
+
+func _try_hit_between(from_position: Vector3, to_position: Vector3) -> void:
+	var space_state: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from_position, to_position)
+	query.collide_with_areas = true
+	query.collide_with_bodies = true
+	query.exclude = _get_initial_ray_excludes()
+
+	for _attempt in range(12):
+		var result: Dictionary = space_state.intersect_ray(query)
+		if not result.has("collider"):
+			return
+		var collider: Node = result["collider"] as Node
+		if _try_damage_target(collider):
+			return
+		if collider is CollisionObject3D:
+			query.exclude.append((collider as CollisionObject3D).get_rid())
+		else:
+			return
+
+
+func _try_damage_target(target: Node) -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	var damage_target: Node = target
+	if not damage_target.has_method("take_damage"):
+		damage_target = target.get_parent()
+	if damage_target != null and damage_target.has_method("take_damage"):
+		has_impacted = true
 		_spawn_impact_burst()
-		owner.take_damage(damage)
+		damage_target.take_damage(damage)
 		queue_free()
+		return true
+	return false
+
+
+func _get_initial_ray_excludes() -> Array[RID]:
+	var excludes: Array[RID] = []
+	if area != null:
+		excludes.append(area.get_rid())
+	return excludes
 
 
 func _spawn_impact_burst() -> void:

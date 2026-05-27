@@ -1,20 +1,29 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://byc1w7qhd0q5w"]
 
-[ext_resource type="Script" path="res://Scripts/3d/drone_enemy.gd" id="1_drone"]
-[ext_resource type="PackedScene" path="res://Assets/Enemies/sci-fi_camera_drone.glb" id="2_model"]
+[ext_resource type="Script" uid="uid://cub04eddmqfqe" path="res://Scripts/3d/drone_enemy.gd" id="1_drone"]
+[ext_resource type="PackedScene" uid="uid://d1ltjbhaswvj2" path="res://Assets/Enemies/sci-fi_camera_drone.glb" id="2_model"]
 
 [sub_resource type="SphereShape3D" id="1_collision"]
-radius = 2.1
+radius = 4.770135
 
-[node name="DroneEnemy" type="CharacterBody3D"]
+[sub_resource type="SphereShape3D" id="2_hitbox"]
+radius = 44.291
+
+[node name="DroneEnemy" type="CharacterBody3D" unique_id=1186999166]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 109.06801, 0)
 script = ExtResource("1_drone")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1845682090]
 shape = SubResource("1_collision")
 
-[node name="Visual" parent="." instance=ExtResource("2_model")]
-transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, 0, 0)
+[node name="Hitbox" type="Area3D" parent="." unique_id=139133900]
 
-[node name="OmniLight3D" type="OmniLight3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox" unique_id=1248256619]
+shape = SubResource("2_hitbox")
+
+[node name="Visual" parent="." unique_id=965455226 instance=ExtResource("2_model")]
+transform = Transform3D(0.59999996, 0, 0, 0, 0.5627588, 0.20809262, 0, -0.20809262, 0.5627588, 0, -82.68268, 32.59543)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1299619372]
 light_color = Color(1, 0.25, 0.25, 1)
 light_energy = 1.8

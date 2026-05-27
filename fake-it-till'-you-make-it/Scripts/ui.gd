@@ -11,6 +11,9 @@ extends CanvasLayer
 @onready var audio_check_button: CheckButton = $Settings/settings/TextureRect/AudioCheckButton
 @onready var crosshair: TextureRect = $Crosshair
 @onready var casted_label: Label = $CastedLabel
+@onready var opened_book: TextureRect = $OpenedBook
+@onready var tutorial: CanvasItem = $tutorial
+@onready var spellbook_btn: TextureButton = $SpellbookBtn
 
 const ABILITY_DISPLAY: Dictionary = {
 	"Fireball": "Solar Flare",
@@ -34,18 +37,14 @@ var wave_label: Label
 var kills_label: Label
 var hint_label: Label
 var health_label: Label
-var cooldown_label: Label
 var fer_state_label: Label
 var ser_state_label: Label
 var stt_state_label: Label
 var transcript_label: Label
 var chain_label: Label
-var spellbook_panel: Panel
-var spellbook_box: VBoxContainer
 
 func _ready() -> void:
 	_ensure_status_labels()
-	_ensure_spellbook_panel()
 	player_health_bar.max_value = 100
 	audio_check_button.button_pressed = true
 	_set_default_hud_state()
@@ -101,7 +100,15 @@ func _process(_delta: float) -> void:
 				)
 
 	if Input.is_action_just_pressed("ui_cancel"):
-		settings.visible = not settings.visible
+		if settings.visible:
+			settings.visible = false
+		elif opened_book.visible:
+			opened_book.visible = false
+			spellbook_btn.button_pressed = false
+		elif tutorial.visible:
+			tutorial.visible = false
+		else:
+			settings.visible = true
 		update_mouse_and_crosshair()
 	if Input.is_action_just_pressed("toggle_spellbook"):
 		_toggle_spellbook_panel()
@@ -128,13 +135,6 @@ func update_metrics(current_health: int, max_health: int, score: int, wave: int,
 	kills_label.text = "Kills: %d" % kills
 	mode_label.text = "Mode: %s | M mode | E spellbook" % mode_name
 	chain_label.text = "Spell Chain: x%d" % cast_chain
-
-
-func update_cooldown(seconds_remaining: float) -> void:
-	if seconds_remaining <= 0.0:
-		cooldown_label.text = "Cooldown: Ready"
-	else:
-		cooldown_label.text = "Cooldown: %.1fs" % seconds_remaining
 
 
 func update_readiness(fer_ready: bool, ser_ready: bool, stt_ready: bool, ready_to_fire: bool, ability_name: String, spoken_word: String, expected_keyword: String = "", mode_name: String = "") -> void:
@@ -198,27 +198,21 @@ func show_status_message(text: String, color: Color = Color.WHITE) -> void:
 
 
 func update_spellbook(entries: Array[Dictionary]) -> void:
-	_ensure_spellbook_panel()
-	for child in spellbook_box.get_children():
-		child.queue_free()
-
-	var title: Label = Label.new()
-	title.text = "Cosmic Spellbook"
-	spellbook_box.add_child(title)
-
+	var spellbook_text: String = ""
 	for entry in entries:
-		var line: Label = Label.new()
-		line.text = "%s | Face: %s | Voice: %s | Say: %s" % [
+		spellbook_text += "- %s: say '%s'  -> Face: %s | Voice: %s\n" % [
 			str(entry.get("display_name", "")),
+			str(entry.get("keyword", "")),
 			str(entry.get("face", "")),
 			str(entry.get("voice", "")),
-			str(entry.get("keyword", "")),
 		]
-		spellbook_box.add_child(line)
+	var book_label: Label = opened_book.get_node_or_null("Label") as Label
+	if book_label != null:
+		book_label.text = spellbook_text.strip_edges()
 
 
 func update_mouse_and_crosshair() -> void:
-	var any_popup_open: bool = settings.visible
+	var any_popup_open: bool = settings.visible or opened_book.visible or tutorial.visible
 	if any_popup_open:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		crosshair.visible = false
@@ -260,7 +254,6 @@ func _ensure_status_labels() -> void:
 	wave_label = _ensure_label("Wave")
 	kills_label = _ensure_label("Kills")
 	hint_label = _ensure_label("Hint")
-	cooldown_label = _ensure_label("Cooldown")
 	fer_state_label = _ensure_label("FERState")
 	ser_state_label = _ensure_label("SERState")
 	stt_state_label = _ensure_label("STTState")
@@ -276,34 +269,14 @@ func _ensure_label(node_name: String) -> Label:
 	return label
 
 
-func _ensure_spellbook_panel() -> void:
-	if spellbook_panel != null:
-		return
-
-	spellbook_panel = Panel.new()
-	spellbook_panel.name = "SpellbookPanel"
-	spellbook_panel.visible = false
-	spellbook_panel.offset_left = 860.0
-	spellbook_panel.offset_top = 90.0
-	spellbook_panel.offset_right = 1260.0
-	spellbook_panel.offset_bottom = 360.0
-	add_child(spellbook_panel)
-
-	spellbook_box = VBoxContainer.new()
-	spellbook_box.name = "VBoxContainer"
-	spellbook_box.offset_left = 12.0
-	spellbook_box.offset_top = 12.0
-	spellbook_box.offset_right = 388.0
-	spellbook_box.offset_bottom = 258.0
-	spellbook_panel.add_child(spellbook_box)
-
-
 func _set_default_hud_state() -> void:
 	update_ai_text("", "unknown", 0.0, "unknown", 0.0, "")
 	update_metrics(100, 100, 0, 0, 0, "FER+SER+STT")
 	update_readiness(false, false, false, false, "", "")
-	update_cooldown(0.0)
 	settings.visible = false
+	opened_book.visible = false
+	spellbook_btn.button_pressed = false
+	tutorial.visible = true
 
 
 func _exit_tree() -> void:
@@ -320,17 +293,46 @@ func _indicator_text(label_name: String, active: bool) -> String:
 
 
 func _toggle_spellbook_panel() -> void:
-	_ensure_spellbook_panel()
-	spellbook_panel.visible = not spellbook_panel.visible
+	opened_book.visible = not opened_book.visible
+	spellbook_btn.button_pressed = opened_book.visible
+	if opened_book.visible:
+		settings.visible = false
+		tutorial.visible = false
+	update_mouse_and_crosshair()
+
+
+func _on_spellbook_btn_pressed() -> void:
+	_toggle_spellbook_panel()
+
+
+func _on_spellbook_btn_toggled(toggled_on: bool) -> void:
+	opened_book.visible = toggled_on
+	if opened_book.visible:
+		settings.visible = false
+		tutorial.visible = false
+	update_mouse_and_crosshair()
+
+
+func _on_open_tutorial_pressed() -> void:
+	tutorial.visible = true
+	opened_book.visible = false
+	spellbook_btn.button_pressed = false
+	settings.visible = false
+	update_mouse_and_crosshair()
 
 
 func _on_settings_pressed() -> void:
 	settings.visible = not settings.visible
+	if settings.visible:
+		opened_book.visible = false
+		spellbook_btn.button_pressed = false
+		tutorial.visible = false
 	update_mouse_and_crosshair()
 
 
 func _on_close_btn_pressed() -> void:
 	settings.visible = false
+	tutorial.visible = false
 	update_mouse_and_crosshair()
 
 
@@ -340,3 +342,33 @@ func _on_exit_game_pressed() -> void:
 
 func _on_check_button_toggled(toggled_on: bool) -> void:
 	audio_stream.volume_db = 0 if toggled_on else -100
+
+
+func _select_firing_mode(mode_name: String) -> void:
+	var parent_node: Node = get_parent()
+	if parent_node != null and parent_node.has_method("set_firing_mode_by_name"):
+		parent_node.set_firing_mode_by_name(mode_name)
+
+
+func _on_mode_fer_ser_stt_pressed() -> void:
+	_select_firing_mode("FER_SER_STT")
+
+
+func _on_mode_fer_stt_pressed() -> void:
+	_select_firing_mode("FER_STT")
+
+
+func _on_mode_ser_stt_pressed() -> void:
+	_select_firing_mode("SER_STT")
+
+
+func _on_mode_stt_only_pressed() -> void:
+	_select_firing_mode("STT_ONLY")
+
+
+func _on_mode_ser_only_pressed() -> void:
+	_select_firing_mode("SER_ONLY")
+
+
+func _on_mode_manual_pressed() -> void:
+	_select_firing_mode("MANUAL")

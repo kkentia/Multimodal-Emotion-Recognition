@@ -15,6 +15,9 @@ signal enemy_spawned(enemy: Node)
 @export var wave_growth_interval: int = 3
 @export var enemies_added_per_growth: int = 1
 @export var max_alive_added_per_growth: int = 1
+@export var static_enemy_count: int = 9
+@export var static_surface_offset: float = 60.0
+@export var static_min_spacing: float = 35.0
 
 var current_wave: int = 0
 var alive_enemies: Array[Node] = []
@@ -33,6 +36,16 @@ func _ready() -> void:
 func start_waves() -> void:
 	_spawn_wave()
 	wave_timer.start()
+
+
+func spawn_static_enemies(count: int = -1) -> void:
+	_cleanup_alive()
+	var target_count: int = static_enemy_count if count < 0 else count
+	var anchors: Array[Node3D] = _get_spawn_anchors()
+	if anchors.is_empty():
+		return
+	for index in range(target_count):
+		_spawn_static_enemy(index, anchors)
 
 
 func _on_wave_timer_timeout() -> void:
@@ -65,6 +78,19 @@ func _spawn_enemy() -> void:
 	enemy_spawned.emit(enemy)
 
 
+func _spawn_static_enemy(index: int, anchors: Array[Node3D]) -> void:
+	if enemy_scene == null:
+		return
+
+	var enemy: Node3D = enemy_scene.instantiate()
+	var parent_scene: Node = get_parent()
+	parent_scene.add_child(enemy)
+	var anchor: Node3D = anchors[index % anchors.size()]
+	enemy.global_position = _pick_planet_surface_position(anchor)
+	alive_enemies.append(enemy)
+	enemy_spawned.emit(enemy)
+
+
 func unregister_enemy(enemy: Node) -> void:
 	alive_enemies.erase(enemy)
 
@@ -82,10 +108,7 @@ func _pick_spawn_position() -> Vector3:
 	if player != null:
 		return _pick_player_relative_spawn(player)
 
-	var anchors: Array[Node3D] = []
-	for anchor in spawn_anchor_paths:
-		if anchor != null and is_instance_valid(anchor):
-			anchors.append(anchor)
+	var anchors: Array[Node3D] = _get_spawn_anchors()
 
 	var center: Vector3 = global_position
 	if not anchors.is_empty():
@@ -103,6 +126,60 @@ func _pick_spawn_position() -> Vector3:
 			return candidate
 
 	return candidate
+
+
+func _pick_planet_surface_position(anchor: Node3D) -> Vector3:
+	var center: Vector3 = anchor.global_position
+	var radius: float = _get_anchor_radius(anchor)
+	var candidate: Vector3 = center
+	for _attempt in range(24):
+		var direction: Vector3 = _random_unit_vector()
+		candidate = center + direction * (radius + static_surface_offset)
+		if _is_safe_spawn_position(candidate) and _is_far_from_static_enemies(candidate):
+			return candidate
+	return candidate
+
+
+func _random_unit_vector() -> Vector3:
+	var direction: Vector3 = Vector3.ZERO
+	while direction.length_squared() < 0.01:
+		direction = Vector3(
+			randf_range(-1.0, 1.0),
+			randf_range(-1.0, 1.0),
+			randf_range(-1.0, 1.0)
+		)
+	return direction.normalized()
+
+
+func _get_anchor_radius(anchor: Node3D) -> float:
+	var collision_shape: CollisionShape3D = anchor.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if collision_shape != null and collision_shape.shape is SphereShape3D:
+		return (collision_shape.shape as SphereShape3D).radius
+
+	var meshes: Array[Node] = anchor.find_children("*", "MeshInstance3D", true, false)
+	for node in meshes:
+		var mesh_instance: MeshInstance3D = node as MeshInstance3D
+		if mesh_instance != null and mesh_instance.mesh is SphereMesh:
+			return (mesh_instance.mesh as SphereMesh).radius
+
+	return spawn_radius
+
+
+func _get_spawn_anchors() -> Array[Node3D]:
+	var anchors: Array[Node3D] = []
+	for anchor in spawn_anchor_paths:
+		if anchor != null and is_instance_valid(anchor):
+			anchors.append(anchor)
+	anchors.shuffle()
+	return anchors
+
+
+func _is_far_from_static_enemies(candidate: Vector3) -> bool:
+	for enemy in alive_enemies:
+		if is_instance_valid(enemy) and enemy is Node3D:
+			if (enemy as Node3D).global_position.distance_to(candidate) < static_min_spacing:
+				return false
+	return true
 
 
 func _pick_player_relative_spawn(player: Node3D) -> Vector3:
