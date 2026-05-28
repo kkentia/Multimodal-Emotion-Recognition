@@ -1,0 +1,20 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bdqs1b7jn0bop"]
+
+[ext_resource type="Texture2D" uid="uid://dfxchdai31i7n" path="res://Assets/Textures/2k_jupiter.jpg" id="1_q1nts"]
+[ext_resource type="Texture2D" uid="uid://didprewd1suif" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_AmbientOcclusion.png" id="AmbientOcclusion"]
+[ext_resource type="Texture2D" uid="uid://mb4x3wbs0bju" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Displacement.png" id="Displacement"]
+[ext_resource type="Texture2D" uid="uid://dp366s5ay5ptt" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_NormalGL.png" id="NormalGL"]
+[ext_resource type="Texture2D" uid="uid://cdvv8isbq8v0j" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Roughness.png" id="Roughness"]
+
+[resource]
+albedo_texture = ExtResource("1_q1nts")
+roughness_texture = ExtResource("Roughness")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_texture = ExtResource("NormalGL")
+ao_enabled = true
+ao_texture = ExtResource("AmbientOcclusion")
+ao_texture_channel = 4
+heightmap_enabled = true
+heightmap_scale = 1.0
+heightmap_texture = ExtResource("Displacement")

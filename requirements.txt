@@ -15,6 +15,8 @@ scipy
 # NLP & speech to txt
 faster-whisper
 transformers
+vosk 
+sounddevice
 
 # math and data
 numpy
