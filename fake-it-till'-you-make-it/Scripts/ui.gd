@@ -1,5 +1,6 @@
 extends CanvasLayer
 
+# --- Existing nodes ---
 @onready var data_box: VBoxContainer = $DataHUD/VBoxContainer
 @onready var ability_label: Label = $DataHUD/VBoxContainer/NLP
 @onready var fer_label: Label = $DataHUD/VBoxContainer/FER
@@ -15,6 +16,15 @@ extends CanvasLayer
 @onready var tutorial: CanvasItem = $tutorial
 @onready var spellbook_btn: TextureButton = $SpellbookBtn
 
+# --- New named HUD nodes you create in the editor ---
+@onready var data_hud: Control = $DataHUD          # whole AI-data panel (to show/hide)
+@onready var wave_label: Label = $TopLeftHUD/WaveLabel
+@onready var mode_label: Label = $TopLeftHUD/ModeLabel
+@onready var score_label: Label = $TopRightHUD/ScoreLabel
+@onready var ability_hint: Label = $DataHUD/VBoxContainer/AbilityHint     # bottom-center, the "X ready — say 'Y'" line
+@onready var stt_label: Label = $DataHUD/VBoxContainer/STT
+@onready var transcript_label: Label = $Whisper
+
 const ABILITY_DISPLAY: Dictionary = {
 	"Fireball": "Solar Flare",
 	"Confusion": "Pulse Jammer",
@@ -29,22 +39,8 @@ var udp_video: PacketPeerUDP = PacketPeerUDP.new()
 var udp_data_bound: bool = false
 var udp_video_bound: bool = false
 
-var stt_label: Label
-var mode_label: Label
-var readiness_label: Label
-var score_label: Label
-var wave_label: Label
-var kills_label: Label
-var hint_label: Label
-var health_label: Label
-var fer_state_label: Label
-var ser_state_label: Label
-var stt_state_label: Label
-var transcript_label: Label
-var chain_label: Label
 
 func _ready() -> void:
-	_ensure_status_labels()
 	player_health_bar.max_value = 100
 	audio_check_button.button_pressed = true
 	_set_default_hud_state()
@@ -86,7 +82,6 @@ func _process(_delta: float) -> void:
 				spoken_word,
 				transcript_text
 			)
-
 			var parent_node: Node = get_parent()
 			if parent_node != null and is_instance_valid(parent_node) and parent_node.has_method("process_ai_payload"):
 				parent_node.process_ai_payload(payload_dict)
@@ -122,49 +117,47 @@ func update_ai_text(spell_name: String, fer_emo: String, fer_prob: float, ser_em
 	ability_label.text = "Ability: %s" % display_ability
 	fer_label.text = "FER: %s %d%%" % [fer_emo.capitalize(), int(clamp(fer_prob, 0.0, 1.0) * 100.0)]
 	ser_label.text = "SER: %s %d%%" % [ser_emo.capitalize(), int(clamp(ser_prob, 0.0, 1.0) * 100.0)]
-	stt_label.text = "STT Cue: %s" % (spoken_word if spoken_word != "" else "waiting")
+	stt_label.text = "Heard: %s" % (spoken_word if spoken_word != "" else "waiting")
 	transcript_label.text = "Transcript: %s" % (transcript_text if transcript_text != "" else "...")
 
 
-func update_metrics(current_health: int, max_health: int, score: int, wave: int, kills: int, mode_name: String, cast_chain: int = 0) -> void:
+func update_metrics(current_health: int, max_health: int, score: int, wave: int, _kills: int, mode_name: String, _cast_chain: int = 0) -> void:
+	# kills is no longer shown mid-game (saved for the game over screen)
 	player_health_bar.max_value = max_health
 	player_health_bar.value = current_health
-	health_label.text = "Health: %d / %d" % [current_health, max_health]
 	score_label.text = "Score: %d" % score
-	wave_label.text = "Wave: %d" % wave
-	kills_label.text = "Kills: %d" % kills
-	mode_label.text = "Mode: %s | M mode | E spellbook" % mode_name
-	chain_label.text = "Spell Chain: x%d" % cast_chain
+	wave_label.text = "Wave %d" % wave
+	mode_label.text = mode_name
+
+	# Hide the AI data panel entirely when in Manual mode
+	var is_manual: bool = mode_name == "Manual"
+	data_hud.visible = not is_manual
 
 
 func update_readiness(fer_ready: bool, ser_ready: bool, stt_ready: bool, ready_to_fire: bool, ability_name: String, spoken_word: String, expected_keyword: String = "", mode_name: String = "") -> void:
-	var status_parts: Array[String] = [
-		"FER %s" % _flag_text(fer_ready),
-		"SER %s" % _flag_text(ser_ready),
-		"STT %s" % _flag_text(stt_ready)
-	]
-	readiness_label.text = "Ready: %s" % " | ".join(status_parts)
-	fer_state_label.text = _indicator_text("FER", fer_ready)
-	ser_state_label.text = _indicator_text("SER", ser_ready)
-	stt_state_label.text = _indicator_text("STT", stt_ready)
-
-	var detail: String = "No spellbook match yet"
+	# Single clear hint line instead of ON/OFF indicators
+	var detail: String = ""
 	if ability_name != "":
-		detail = "%s armed" % format_ability_name(ability_name)
-		if expected_keyword != "" and not ready_to_fire and mode_name != "Manual":
-			detail = "%s armed | say '%s'" % [format_ability_name(ability_name), expected_keyword]
-	elif spoken_word != "" and spoken_word != "manual":
-		detail = "No spellbook match for '%s'" % spoken_word
-	if spoken_word == "manual":
-		detail = "%s armed | LMB fire | F cycle" % format_ability_name(ability_name)
-	if ready_to_fire:
-		if mode_name == "Manual":
-			detail = "%s manual override active" % format_ability_name(ability_name)
-		elif expected_keyword != "":
-			detail = "%s ready via '%s'" % [format_ability_name(ability_name), expected_keyword]
+		if ready_to_fire:
+			if mode_name == "Manual":
+				detail = "%s — LMB to fire" % format_ability_name(ability_name)
+			elif expected_keyword != "":
+				detail = "%s READY — say \"%s\"" % [format_ability_name(ability_name), expected_keyword]
+			else:
+				detail = "%s READY" % format_ability_name(ability_name)
 		else:
-			detail = "%s ready" % format_ability_name(ability_name)
-	hint_label.text = detail
+			if expected_keyword != "" and mode_name != "Manual":
+				detail = format_ability_name(ability_name) + " armed, say \"" + expected_keyword + "\" to cast!"
+
+
+			else:
+				detail = "%s armed" % format_ability_name(ability_name)
+	elif spoken_word != "" and spoken_word != "manual":
+		detail = "Make a face + voice to charge a spell"
+	else:
+		detail = "Hold an emotion to charge a spell"
+
+	ability_hint.text = detail
 
 
 func show_casted_message(spell_name: String) -> void:
@@ -228,7 +221,6 @@ func format_ability_name(name: String) -> String:
 func get_ability_name_from_emotions(fer: String, ser: String) -> String:
 	fer = fer.to_lower()
 	ser = ser.to_lower()
-
 	if fer == "angry" and ser == "angry":
 		return "Solar Flare"
 	elif fer == "happy" and ser == "angry":
@@ -244,31 +236,6 @@ func get_ability_name_from_emotions(fer: String, ser: String) -> String:
 	return "—"
 
 
-func _ensure_status_labels() -> void:
-	health_label = _ensure_label("Health")
-	stt_label = _ensure_label("STT")
-	transcript_label = _ensure_label("Transcript")
-	mode_label = _ensure_label("Mode")
-	readiness_label = _ensure_label("Readiness")
-	score_label = _ensure_label("Score")
-	wave_label = _ensure_label("Wave")
-	kills_label = _ensure_label("Kills")
-	hint_label = _ensure_label("Hint")
-	fer_state_label = _ensure_label("FERState")
-	ser_state_label = _ensure_label("SERState")
-	stt_state_label = _ensure_label("STTState")
-	chain_label = _ensure_label("SpellChain")
-
-
-func _ensure_label(node_name: String) -> Label:
-	var label: Label = data_box.get_node_or_null(node_name) as Label
-	if label == null:
-		label = Label.new()
-		label.name = node_name
-		data_box.add_child(label)
-	return label
-
-
 func _set_default_hud_state() -> void:
 	update_ai_text("", "unknown", 0.0, "unknown", 0.0, "")
 	update_metrics(100, 100, 0, 0, 0, "FER+SER+STT")
@@ -282,14 +249,6 @@ func _set_default_hud_state() -> void:
 func _exit_tree() -> void:
 	udp_data.close()
 	udp_video.close()
-
-
-func _flag_text(state: bool) -> String:
-	return "OK" if state else "--"
-
-
-func _indicator_text(label_name: String, active: bool) -> String:
-	return "%s: %s" % [label_name, "ON" if active else "OFF"]
 
 
 func _toggle_spellbook_panel() -> void:
@@ -352,23 +311,13 @@ func _select_firing_mode(mode_name: String) -> void:
 
 func _on_mode_fer_ser_stt_pressed() -> void:
 	_select_firing_mode("FER_SER_STT")
-
-
 func _on_mode_fer_stt_pressed() -> void:
 	_select_firing_mode("FER_STT")
-
-
 func _on_mode_ser_stt_pressed() -> void:
 	_select_firing_mode("SER_STT")
-
-
 func _on_mode_stt_only_pressed() -> void:
 	_select_firing_mode("STT_ONLY")
-
-
 func _on_mode_ser_only_pressed() -> void:
 	_select_firing_mode("SER_ONLY")
-
-
 func _on_mode_manual_pressed() -> void:
 	_select_firing_mode("MANUAL")

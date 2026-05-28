@@ -22,11 +22,12 @@ bg_color = Color(0.2901961, 0.9254902, 0.3372549, 1)
 script = ExtResource("1_varqg")
 
 [node name="WebcamFeed" type="TextureRect" parent="." unique_id=917062065]
+visible = false
 layout_direction = 4
-offset_left = 990.0
-offset_top = 90.0
-offset_right = 1279.0
-offset_bottom = 284.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 301.0
+offset_bottom = 204.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 texture = SubResource("CameraTexture_1dgwv")
@@ -34,16 +35,20 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="DataHUD" type="Panel" parent="." unique_id=2008427267]
-offset_left = 10.0
-offset_top = 225.0
-offset_right = 304.0
-offset_bottom = 469.0
+self_modulate = Color(0.7294118, 0.7294118, 0.7294118, 0)
+offset_left = 22.0
+offset_top = 231.0
+offset_right = 316.0
+offset_bottom = 475.0
 mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="DataHUD" unique_id=820276242]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.136
+anchor_bottom = 0.316
+offset_right = 0.01599884
+offset_bottom = -37.104004
 
 [node name="NLP" type="Label" parent="DataHUD/VBoxContainer" unique_id=637659733]
 layout_mode = 2
@@ -54,7 +59,14 @@ layout_mode = 2
 [node name="SER" type="Label" parent="DataHUD/VBoxContainer" unique_id=501853307]
 layout_mode = 2
 
+[node name="STT" type="Label" parent="DataHUD/VBoxContainer" unique_id=1712679765]
+layout_mode = 2
+
+[node name="AbilityHint" type="Label" parent="DataHUD/VBoxContainer" unique_id=1902889598]
+layout_mode = 2
+
 [node name="SpellbookBtn" type="TextureButton" parent="." unique_id=280788790]
+visible = false
 offset_left = 1117.0
 offset_top = 544.0
 offset_right = 1275.0
@@ -68,6 +80,7 @@ ignore_texture_size = true
 stretch_mode = 0
 
 [node name="OpenedBook" type="TextureRect" parent="." unique_id=1104542033]
+visible = false
 offset_left = 383.0
 offset_top = 170.0
 offset_right = 903.0
@@ -99,6 +112,7 @@ offset_bottom = 334.0
 text = "See Instructions"
 
 [node name="tutorial" type="ColorRect" parent="." unique_id=112637210]
+visible = false
 offset_left = -2.0
 offset_top = 2.0
 offset_right = 1293.0
@@ -142,6 +156,7 @@ text = "X"
 flat = true
 
 [node name="Settings" type="Button" parent="." unique_id=1293735417]
+visible = false
 offset_left = 1200.0
 offset_top = 9.0
 offset_right = 1288.0
@@ -207,7 +222,7 @@ offset_bottom = 21.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Sound"
 
-[node name="ModeLabel" type="Label" parent="Settings/settings/TextureRect"]
+[node name="ModeLabel" type="Label" parent="Settings/settings/TextureRect" unique_id=461558265]
 layout_mode = 0
 offset_left = 147.0
 offset_top = 250.0
@@ -219,7 +234,7 @@ theme_override_font_sizes/font_size = 24
 text = "Casting Mode"
 horizontal_alignment = 1
 
-[node name="ModeFER_SER_STT" type="Button" parent="Settings/settings/TextureRect"]
+[node name="ModeFER_SER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=580328628]
 layout_mode = 0
 offset_left = 124.0
 offset_top = 286.0
@@ -227,7 +242,7 @@ offset_right = 282.0
 offset_bottom = 322.0
 text = "FER+SER+STT"
 
-[node name="ModeFER_STT" type="Button" parent="Settings/settings/TextureRect"]
+[node name="ModeFER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=902417903]
 layout_mode = 0
 offset_left = 306.0
 offset_top = 286.0
@@ -235,7 +250,7 @@ offset_right = 464.0
 offset_bottom = 322.0
 text = "FER+STT"
 
-[node name="ModeSER_STT" type="Button" parent="Settings/settings/TextureRect"]
+[node name="ModeSER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=361494340]
 layout_mode = 0
 offset_left = 124.0
 offset_top = 332.0
@@ -243,7 +258,7 @@ offset_right = 282.0
 offset_bottom = 368.0
 text = "SER+STT"
 
-[node name="ModeSTT_ONLY" type="Button" parent="Settings/settings/TextureRect"]
+[node name="ModeSTT_ONLY" type="Button" parent="Settings/settings/TextureRect" unique_id=1429600948]
 layout_mode = 0
 offset_left = 306.0
 offset_top = 332.0
@@ -251,7 +266,7 @@ offset_right = 464.0
 offset_bottom = 368.0
 text = "STT Only"
 
-[node name="ModeSER_ONLY" type="Button" parent="Settings/settings/TextureRect"]
+[node name="ModeSER_ONLY" type="Button" parent="Settings/settings/TextureRect" unique_id=1300014500]
 layout_mode = 0
 offset_left = 124.0
 offset_top = 378.0
@@ -259,7 +274,7 @@ offset_right = 282.0
 offset_bottom = 414.0
 text = "SER Only"
 
-[node name="ModeMANUAL" type="Button" parent="Settings/settings/TextureRect"]
+[node name="ModeMANUAL" type="Button" parent="Settings/settings/TextureRect" unique_id=1745354127]
 layout_mode = 0
 offset_left = 306.0
 offset_top = 378.0
@@ -294,7 +309,6 @@ texture = ExtResource("8_335ti")
 expand_mode = 1
 
 [node name="CastedLabel" type="Label" parent="." unique_id=1475186585]
-visible = false
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 514.0
@@ -304,6 +318,45 @@ offset_bottom = 100.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 64
 text = "CASTED!"
+
+[node name="TopLeftHUD" type="VBoxContainer" parent="." unique_id=1518449598]
+anchors_preset = -1
+anchor_left = 0.90200007
+anchor_top = 0.029000001
+anchor_right = 0.97300005
+anchor_bottom = 0.09900001
+offset_left = -0.5600586
+offset_top = 0.11999893
+offset_right = 0.5599365
+offset_bottom = -0.2800064
+
+[node name="ModeLabel" type="Label" parent="TopLeftHUD" unique_id=2242615]
+layout_mode = 2
+
+[node name="WaveLabel" type="Label" parent="TopLeftHUD" unique_id=1992588162]
+layout_mode = 2
+
+[node name="TopRightHUD" type="VBoxContainer" parent="." unique_id=1530580241]
+anchors_preset = -1
+anchor_left = 0.017
+anchor_top = 0.93100005
+anchor_right = 0.066
+anchor_bottom = 0.98600006
+offset_left = 0.23999786
+offset_top = -0.32006836
+offset_right = 0.5200043
+offset_bottom = 0.079956055
+
+[node name="ScoreLabel" type="Label" parent="TopRightHUD" unique_id=1029176189]
+layout_mode = 2
+
+[node name="Whisper" type="Label" parent="." unique_id=267857874]
+offset_left = 158.0
+offset_top = 688.0
+offset_right = 1179.0
+offset_bottom = 711.0
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [connection signal="pressed" from="SpellbookBtn" to="." method="_on_spellbook_btn_pressed"]
 [connection signal="pressed" from="OpenedBook/openTutorial" to="." method="_on_open_tutorial_pressed"]
