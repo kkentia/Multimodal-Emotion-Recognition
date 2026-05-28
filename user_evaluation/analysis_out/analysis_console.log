@@ -1,0 +1,41 @@
+[ok]  latency CSV loaded: c:\Users\anabo\Documents\Master\SP26\Multimodal UI\Multimodal-Emotion-Recognition\performance_log.csv  rows=149  cols=['frame', 'timestamp', 'fer_ms', 'ser_ms', 'whisper_ms', 'whisper_inference_ms', 'fusion_ms', 'udp_send_ms', 'total_ms', 'face_emotion', 'face_conf', 'speech_emotion', 'speech_conf', 'spoken_word', 'spell', 'ready']
+[ok]  dropped first 50 frames as warmup (kept 99 of 149 for analysis)
+[ok]  whisper_inference_ms: 99 logged frames → 27 unique inference calls after dedup
+      design note: Whisper sleeps 3 s between calls, so transcript refresh rate ≤ 0.33 Hz regardless of inference time
+
+=== Latency summary ===
+                       n     mean  median      p95      p99      max
+metric                                                              
+fer_ms                99    68.08   64.27    75.44    84.94   358.06
+ser_ms                99   439.46  432.62   490.09   510.00   514.74
+fusion_ms             99     0.01    0.01     0.01     0.03     0.05
+udp_send_ms           99     0.12    0.18     0.31     0.35     0.35
+total_ms              99   507.82  498.59   562.76   594.68   792.63
+whisper_inference_ms  27  1035.17  945.30  1822.51  2120.38  2125.25
+[ok]  wrote latency_components.png
+[ok]  wrote loop_fps.png   median FPS = 2.01  p5 FPS = 1.78
+
+[ok]  user-study CSV loaded: c:\Users\anabo\Documents\Master\SP26\Multimodal UI\Multimodal-Emotion-Recognition\qualitative.csv  n=8 participants
+
+=== Per-item descriptives ===
+                                 n  mean    sd  min  median  max
+understood_concept             8.0  4.62  0.74  3.0     5.0  5.0
+understood_modality_per_spell  8.0  4.25  0.71  3.0     4.0  5.0
+spellbook_helped               8.0  4.88  0.35  4.0     5.0  5.0
+FER_reliable                   8.0  3.88  0.99  3.0     3.5  5.0
+SER_reliable                   8.0  2.88  0.83  2.0     3.0  4.0
+STT_reliable                   8.0  3.38  0.92  2.0     3.0  5.0
+fusion_correct                 8.0  4.00  0.53  3.0     4.0  5.0
+failure_diagnosable            8.0  3.12  0.83  2.0     3.0  4.0
+engagement                     8.0  4.62  0.74  3.0     5.0  5.0
+in_control                     8.0  3.12  0.99  1.0     3.0  4.0
+difficulty                     8.0  4.25  1.16  2.0     5.0  5.0
+
+=== Subscale stats (one-sample Wilcoxon vs neutral=3) ===
+     subscale  n  median  mean   sd   W      p  rank_biserial_r effect_size_label
+Understanding  8    4.67  4.58 0.46 0.0 0.0078            1.000             large
+  Reliability  8    3.30  3.45 0.58 2.0 0.0625            0.786             large
+   Experience  8    4.00  3.88 0.79 3.5 0.0547            0.889             large
+[ok]  wrote user_study_items.png
+[ok]  wrote user_study_subscales.png
+[ok]  wrote user_study_categorical.png

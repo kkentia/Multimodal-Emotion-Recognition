@@ -7,6 +7,7 @@ import threading
 import os
 from collections import deque
 from enum import Enum
+import csv
 
 import torch
 import torch.nn as nn
@@ -61,6 +62,24 @@ SER_LABEL_MAP = {
     "disgust":   "angry",
 }
 
+PERFORMANCE_LOG = "performance_log.csv"
+LATENCY_WINDOW = 200
+
+
+    # Initialize the CSV with a header row, once at startup
+def init_performance_log():
+    with open(PERFORMANCE_LOG, mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([
+    "frame", "timestamp",
+    "fer_ms", "ser_ms", "whisper_ms", "whisper_inference_ms",
+    "fusion_ms", "udp_send_ms", "total_ms",
+    "face_emotion", "face_conf",
+    "speech_emotion", "speech_conf",
+    "spoken_word", "spell", "ready"
+])
+        
+    
 def _find_ser_checkpoint():
     results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "MMUI", "results")
     if not os.path.isdir(results_dir):
@@ -117,6 +136,8 @@ class SERModel:
 
 _whisper_transcript = ""
 _whisper_lock       = threading.Lock()
+_whisper_last_latency_ms = 0.0
+_whisper_call_count = 0
 
 class WhisperTranscriber:
     def __init__(self, model_size: str = WHISPER_MODEL_SIZE):
@@ -129,18 +150,21 @@ class WhisperTranscriber:
         print("[INFO] Whisper model ready.")
 
     def _loop(self):
-        global _whisper_transcript
+        global _whisper_transcript, _whisper_last_latency_ms
         while self._running:
             with _audio_lock:
                 audio = _audio_buffer.copy()
+            t0 = time.perf_counter()
             segments, _ = self._model.transcribe(
                 audio,
                 language=WHISPER_LANGUAGE,
                 beam_size=5,
             )
             text = " ".join(seg.text for seg in segments).strip()
+            elapsed_ms = (time.perf_counter() - t0) * 1000.0
             with _whisper_lock:
                 _whisper_transcript = text
+                _whisper_last_latency_ms = elapsed_ms
             time.sleep(WHISPER_INTERVAL)
 
     def start(self):
@@ -154,7 +178,11 @@ class WhisperTranscriber:
 def get_whisper_transcript() -> str:
     with _whisper_lock:
         return _whisper_transcript
-
+    
+def get_whisper_latency() -> float:
+    with _whisper_lock:
+        return _whisper_last_latency_ms
+    
 class Mode(Enum):
     FER_ONLY = 1
     SER_ONLY = 2
@@ -381,7 +409,15 @@ def open_camera():
 
 def main():
     print("[INFO] Starting interface...")
-
+    
+    
+    init_performance_log()
+    fer_history = deque(maxlen=LATENCY_WINDOW)
+    ser_history = deque(maxlen=LATENCY_WINDOW)
+    whisper_history = deque(maxlen=LATENCY_WINDOW)
+    total_history = deque(maxlen=LATENCY_WINDOW)
+    
+    
     fer_model = None
     try:
         fer_model = SqueezeNetFER(
@@ -443,7 +479,97 @@ def main():
 
         frame = cv2.flip(frame, 1)
         frame_count += 1
+        total_start = time.perf_counter()
 
+        # === 1. FER timing ===
+        fer_start = time.perf_counter()
+        if frame_count % 1 == 0:
+            cached_fer = fer_model.predict(frame) if fer_model else fake_fer()
+        fer_latency = (time.perf_counter() - fer_start) * 1000.0
+
+        face_label, face_conf, face_bbox = cached_fer
+        fer = (face_label, face_conf)
+
+        # === 2. SER timing ===
+        ser_start = time.perf_counter()
+        ser = real_ser(ser_model) if ser_model else fake_ser()
+        ser_latency = (time.perf_counter() - ser_start) * 1000.0
+        speech_label, speech_conf = ser
+
+        # === 3. Whisper read timing (just the lookup; transcription runs on its own thread) ===
+        whisper_start = time.perf_counter()
+        transcript = get_whisper_transcript()
+        spoken_word = extract_spoken_word(transcript)
+        whisper_latency = (time.perf_counter() - whisper_start) * 1000.0
+
+        # === 4. Fusion timing ===
+        fusion_start = time.perf_counter()
+        fused_conf = late_fusion(fer, ser)
+        combo = (spoken_word, face_label, speech_label)
+        spell = get_spell(spoken_word, face_label, speech_label)
+        if combo == last_combo:
+            stable_frames += 1
+        else:
+            stable_frames = 0
+            last_combo = combo
+        ready = (
+            spell is not None
+            and fused_conf >= CONF_THRESHOLD
+            and stable_frames >= STABLE_REQUIRED_FRAMES
+        )
+        fusion_latency = (time.perf_counter() - fusion_start) * 1000.0
+
+        # === 5. UDP send timing ===
+        udp_latency = 0.0
+        now = time.time()
+        if now - last_sent_time >= SEND_INTERVAL:
+            udp_start = time.perf_counter()
+            payload = build_payload(
+                face_label, face_conf,
+                speech_label, speech_conf,
+                fused_conf, spoken_word, spell, transcript
+            )
+            send_to_godot_udp(udp_sock, payload)
+            udp_latency = (time.perf_counter() - udp_start) * 1000.0
+            last_sent_time = now
+            if ready and spell:
+                history.appendleft(f"CAST: {spell}")
+            print("[INFO] Sent to Godot:", payload)
+
+        total_latency = (time.perf_counter() - total_start) * 1000.0
+
+        # === LOG THE ROW ===
+        fer_history.append(fer_latency)
+        ser_history.append(ser_latency)
+        whisper_history.append(whisper_latency)
+        total_history.append(total_latency)
+
+        with open(PERFORMANCE_LOG, mode='a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                frame_count, time.time(),
+                round(fer_latency, 3),
+                round(ser_latency, 3),
+                round(whisper_latency, 3),
+                round(get_whisper_latency(), 3),   # ← whisper_inference_ms
+                round(fusion_latency, 3),
+                round(udp_latency, 3),
+                round(total_latency, 3),
+                face_label, round(face_conf, 3),
+                speech_label, round(speech_conf, 3),
+                spoken_word, spell or "", ready,
+            ])
+
+        # === Periodic live summary in the console ===
+        if frame_count % 60 == 0 and fer_history:
+            print(f"[STATS] frames={frame_count}  "
+                f"FER mean={np.mean(fer_history):.1f}ms  "
+                f"SER mean={np.mean(ser_history):.1f}ms  "
+                f"Whisper read mean={np.mean(whisper_history):.1f}ms  "
+                f"Total mean={np.mean(total_history):.1f}ms")
+
+        # ---------------------------------------------------------
+        
         if frame_count % 1 == 0:
             cached_fer = fer_model.predict(frame) if fer_model else fake_fer()
 

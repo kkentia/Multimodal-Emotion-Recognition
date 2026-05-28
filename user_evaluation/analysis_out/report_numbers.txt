@@ -1,0 +1,22 @@
+REPORT-READY NUMBERS
+============================================================
+
+## System latency (descriptive)
+
+  fer_ms                    n=99  median = 64.3 ms  p95 = 75.4 ms  p99 = 84.9 ms
+  ser_ms                    n=99  median = 432.6 ms  p95 = 490.1 ms  p99 = 510.0 ms
+  fusion_ms                 n=99  median = 0.0 ms  p95 = 0.0 ms  p99 = 0.0 ms
+  udp_send_ms               n=99  median = 0.2 ms  p95 = 0.3 ms  p99 = 0.3 ms
+  total_ms                  n=99  median = 498.6 ms  p95 = 562.8 ms  p99 = 594.7 ms
+  whisper_inference_ms      n=27  median = 945.3 ms  p95 = 1822.5 ms  p99 = 2120.4 ms
+
+  Effective median loop rate ≈ 2.0 FPS (based on median total_ms = 498.6 ms).
+
+## User evaluation (n = 8)
+
+Understanding: median = 4.67, mean = 4.58 (SD = 0.46);
+  one-sample Wilcoxon vs neutral (3): W = 0.0, p = 0.0078, r = 1.0 (large effect).
+Reliability: median = 3.3, mean = 3.45 (SD = 0.58);
+  one-sample Wilcoxon vs neutral (3): W = 2.0, p = 0.0625, r = 0.786 (large effect).
+Experience: median = 4.0, mean = 3.88 (SD = 0.79);
+  one-sample Wilcoxon vs neutral (3): W = 3.5, p = 0.0547, r = 0.889 (large effect).

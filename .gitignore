@@ -130,4 +130,4 @@ report/
 # uv
 .python-version
 *.toml
-uv.lock
+uv.lockz
