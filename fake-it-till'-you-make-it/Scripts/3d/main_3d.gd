@@ -271,13 +271,17 @@ func _on_enemy_spawned(enemy: Node) -> void:
 		enemy.attacked_player.connect(_on_enemy_attacked_player)
 
 
-func _on_enemy_destroyed(points: int) -> void:
-	score += points
-	enemies_destroyed += 1
+func _on_enemy_destroyed(points: int, killed_by_player: bool) -> void:
+	if killed_by_player:
+		enemies_destroyed += 1          # ← only count real kills
+		score += points
+		if ui and ui.has_method("show_status_message"):
+			ui.show_status_message("+%d Enemy Banished" % points, Color(1.0, 0.8, 0.25, 1.0))
+	else:
+		score = max(score - 200, 0)
+		if ui and ui.has_method("show_status_message"):
+			ui.show_status_message("-200 Planet Breached!", Color(1.0, 0.3, 0.25, 1.0))
 	_refresh_metrics()
-	if ui and ui.has_method("show_status_message"):
-		ui.show_status_message("+%d Enemy Banished" % points, Color(1.0, 0.8, 0.25, 1.0))
-
 
 func _on_enemy_attacked_player(damage: int) -> void:
 	apply_player_damage(damage)

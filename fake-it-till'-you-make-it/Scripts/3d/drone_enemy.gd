@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-signal destroyed(points: int)
+signal destroyed(points: int, killed_by_player:bool)
 signal attacked_player(damage: int)   # kept so main_3d.gd connections don't break
 
 @export var move_speed: float = 60.0
@@ -61,14 +61,14 @@ func _physics_process(delta: float) -> void:
 
 	# Hit the planet?
 	for i in get_slide_collision_count():
-		var collision := get_slide_collision(i)
-		var collider := collision.get_collider()
-		if collider != null and (collider.is_in_group("planets") or collider.is_in_group("Planets")):
-			if collider.has_method("take_damage"):
-				collider.take_damage(planet_contact_damage)
-				print("☄️ Drone hit ", collider.name, "!")
-			_die()
-			return
+			var collision := get_slide_collision(i)
+			var collider := collision.get_collider()
+			if collider != null and (collider.is_in_group("planets") or collider.is_in_group("Planets")):
+				if collider.has_method("take_damage"):
+					collider.take_damage(planet_contact_damage)
+					print("☄️ Drone hit ", collider.name, "!")
+				_die(false)   # ← crashed into planet, NOT a player kill
+				return
 
 
 func take_damage(_amount: int) -> void:
@@ -78,7 +78,7 @@ func take_damage(_amount: int) -> void:
 	current_health = max(hits_to_kill - hits_taken, 0)
 	_flash_hit()
 	if hits_taken >= hits_to_kill:
-		_die()
+		_die(true)   # killed by player's spell
 
 
 func _setup_material() -> void:
@@ -119,7 +119,7 @@ func _find_primary_mesh() -> MeshInstance3D:
 	return meshes[0] as MeshInstance3D
 
 
-func _die() -> void:
+func _die(killed_by_player: bool = false) -> void:
 	set_physics_process(false)
 	velocity = Vector3.ZERO
 	if collision_shape != null:
@@ -127,7 +127,7 @@ func _die() -> void:
 	if hitbox_shape != null:
 		hitbox_shape.set_deferred("disabled", true)
 	_spawn_death_burst()
-	destroyed.emit(point_value)
+	destroyed.emit(point_value, killed_by_player)   # ← pass the cause
 	queue_free()
 
 
