@@ -7,7 +7,7 @@
 radius = 4.770135
 
 [sub_resource type="SphereShape3D" id="2_hitbox"]
-radius = 44.291
+radius = 100.0
 
 [node name="DroneEnemy" type="CharacterBody3D" unique_id=1186999166]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 109.06801, 0)
@@ -21,6 +21,7 @@ shape = SubResource("1_collision")
 [node name="Hitbox" type="Area3D" parent="." unique_id=139133900]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox" unique_id=1248256619]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8652954, 0, -4.771454)
 shape = SubResource("2_hitbox")
 
 [node name="Visual" parent="." unique_id=965455226 instance=ExtResource("2_model")]
