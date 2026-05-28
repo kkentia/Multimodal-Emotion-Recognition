@@ -7,9 +7,15 @@
 [ext_resource type="Texture2D" uid="uid://yeuntht3m84u" path="res://Assets/Sprites/tutorial.png" id="5_2ydy1"]
 [ext_resource type="FontFile" uid="uid://cfgp6j8ahhu8j" path="res://Assets/Fonts/bucheri-demo/BucheriDEMO-Regular.otf" id="6_varqg"]
 [ext_resource type="Texture2D" uid="uid://ci6cquxcyvskm" path="res://Assets/Sprites/crosshair.png" id="8_335ti"]
-[ext_resource type="Texture2D" uid="uid://7lhuynp5sfy8" path="res://Assets/Sprites/settings.png" id="8_xfvjy"]
 
 [sub_resource type="CameraTexture" id="CameraTexture_1dgwv"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_xfvjy"]
+font_size = 26
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_varqg"]
+font_color = Color(0, 0, 0, 1)
 
 [sub_resource type="StyleBoxLine" id="StyleBoxLine_varqg"]
 color = Color(0.89411765, 0, 0, 1)
@@ -127,32 +133,29 @@ texture = ExtResource("5_2ydy1")
 [node name="Label" type="Label" parent="tutorial/TextureRect" unique_id=859427288]
 layout_mode = 0
 offset_left = 126.0
-offset_top = 129.0
+offset_top = 156.0
 offset_right = 470.0
-offset_bottom = 678.0
+offset_bottom = 705.0
 theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
-text = "------------- Fake your emotions to cast spells! -------------
-- Check the Spellbook by pressing E to check the spell requirements!
+text = " Fake your emotions to cast spells! "
+label_settings = SubResource("LabelSettings_xfvjy")
+autowrap_mode = 1
+
+[node name="Label2" type="Label" parent="tutorial/TextureRect" unique_id=1963965750]
+layout_mode = 0
+offset_left = 140.0
+offset_top = 215.0
+offset_right = 455.0
+offset_bottom = 452.0
+theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
+theme_override_fonts/font = ExtResource("6_varqg")
+text = "- Check the Spellbook by pressing E to check the spell requirements!
 - Press M to switch between casting modes (manual, Voice, Face)
 - In Manual Mode, press F to cycle spells and left-click to cast.
 - Press Space while aiming at another planet to jump between planets.
 -Save your home planet system from Drones!
 "
-autowrap_mode = 1
-
-[node name="Label2" type="Label" parent="tutorial/TextureRect" unique_id=1963965750]
-layout_mode = 0
-offset_left = 155.0
-offset_top = 371.0
-offset_right = 499.0
-offset_bottom = 476.0
-theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
-theme_override_fonts/font = ExtResource("6_varqg")
-text = "FER ---> Face Emotions Recognition
-SER ---> Speech Emtions Recognition
-STT ---> Speech Text (the words you are saying)
-Manual ---> usual keyboard controls"
 autowrap_mode = 1
 
 [node name="CloseBtn2" type="Button" parent="tutorial/TextureRect" unique_id=459798583]
@@ -172,11 +175,11 @@ offset_left = 1200.0
 offset_top = 9.0
 offset_right = 1288.0
 offset_bottom = 75.0
-icon = ExtResource("8_xfvjy")
 flat = true
 expand_icon = true
 
 [node name="settings" type="ColorRect" parent="Settings" unique_id=333948148]
+visible = false
 layout_mode = 0
 offset_left = -1211.0
 offset_top = -15.0
@@ -219,10 +222,10 @@ flat = true
 
 [node name="AudioCheckButton" type="CheckButton" parent="Settings/settings/TextureRect" unique_id=550024274]
 layout_mode = 0
-offset_left = 397.0
-offset_top = 200.0
-offset_right = 441.0
-offset_bottom = 224.0
+offset_left = 393.0
+offset_top = 151.0
+offset_right = 437.0
+offset_bottom = 175.0
 
 [node name="Label" type="Label" parent="Settings/settings/TextureRect/AudioCheckButton" unique_id=1614125792]
 layout_mode = 0
@@ -235,62 +238,79 @@ text = "Sound"
 
 [node name="ModeLabel" type="Label" parent="Settings/settings/TextureRect" unique_id=461558265]
 layout_mode = 0
-offset_left = 147.0
-offset_top = 250.0
-offset_right = 445.0
-offset_bottom = 278.0
+offset_left = 79.0
+offset_top = 181.0
+offset_right = 518.0
+offset_bottom = 248.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
 theme_override_font_sizes/font_size = 24
-text = "Casting Mode"
+text = "Casting Mode
+"
+horizontal_alignment = 1
+
+[node name="ModeLabel2" type="Label" parent="Settings/settings/TextureRect" unique_id=1231777559]
+layout_mode = 0
+offset_left = 73.0
+offset_top = 223.0
+offset_right = 512.0
+offset_bottom = 316.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("6_varqg")
+theme_override_font_sizes/font_size = 24
+text = "FER ---> Face Emotions Recognition
+SER ---> Speech Emtions Recognition
+STT ---> Speech Text (the words you are saying)
+Manual ---> usual keyboard controls"
+label_settings = SubResource("LabelSettings_varqg")
 horizontal_alignment = 1
 
 [node name="ModeFER_SER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=580328628]
 layout_mode = 0
 offset_left = 124.0
-offset_top = 286.0
+offset_top = 327.0
 offset_right = 282.0
-offset_bottom = 322.0
+offset_bottom = 363.0
 text = "FER+SER+STT"
 
 [node name="ModeFER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=902417903]
 layout_mode = 0
 offset_left = 306.0
-offset_top = 286.0
+offset_top = 327.0
 offset_right = 464.0
-offset_bottom = 322.0
+offset_bottom = 363.0
 text = "FER+STT"
 
 [node name="ModeSER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=361494340]
 layout_mode = 0
 offset_left = 124.0
-offset_top = 332.0
+offset_top = 373.0
 offset_right = 282.0
-offset_bottom = 368.0
+offset_bottom = 409.0
 text = "SER+STT"
 
 [node name="ModeSTT_ONLY" type="Button" parent="Settings/settings/TextureRect" unique_id=1429600948]
 layout_mode = 0
 offset_left = 306.0
-offset_top = 332.0
+offset_top = 373.0
 offset_right = 464.0
-offset_bottom = 368.0
+offset_bottom = 409.0
 text = "STT Only"
 
 [node name="ModeSER_ONLY" type="Button" parent="Settings/settings/TextureRect" unique_id=1300014500]
 layout_mode = 0
 offset_left = 124.0
-offset_top = 378.0
+offset_top = 419.0
 offset_right = 282.0
-offset_bottom = 414.0
+offset_bottom = 455.0
 text = "SER Only"
 
 [node name="ModeMANUAL" type="Button" parent="Settings/settings/TextureRect" unique_id=1745354127]
 layout_mode = 0
 offset_left = 306.0
-offset_top = 378.0
+offset_top = 419.0
 offset_right = 464.0
-offset_bottom = 414.0
+offset_bottom = 455.0
 text = "Manual"
 
 [node name="PlayerHealthBar" type="ProgressBar" parent="." unique_id=120560318]

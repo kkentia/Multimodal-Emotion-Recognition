@@ -538,18 +538,18 @@ def main():
         if whisper_transcriber is not None:
             draw_transcript_panel(canvas, px1, canvas_h - 140, px2, canvas_h - 10, transcript)
 
-        cv2.imshow(WINDOW_NAME, canvas)
+        # cv2.imshow(WINDOW_NAME, canvas)
 
-        key = cv2.waitKey(1) & 0xFF
-        if key in (ord("q"), 27):
-            print("[INFO] Quit key pressed.")
-            break
-        elif key == ord("1"):
-            mode = Mode.FER_ONLY
-        elif key == ord("2"):
-            mode = Mode.SER_ONLY
-        elif key == ord("3"):
-            mode = Mode.FUSED
+        # key = cv2.waitKey(1) & 0xFF
+        # if key in (ord("q"), 27):
+        #     print("[INFO] Quit key pressed.")
+        #     break
+        # elif key == ord("1"):
+        #     mode = Mode.FER_ONLY
+        # elif key == ord("2"):
+        #     mode = Mode.SER_ONLY
+        # elif key == ord("3"):
+        #     mode = Mode.FUSED
 
     udp_sock.close()
     video_sock.close()

@@ -5,7 +5,6 @@
 [ext_resource type="Material" uid="uid://bdqs1b7jn0bop" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG.tres" id="2_as664"]
 [ext_resource type="Script" uid="uid://lef5qvnsl3ab" path="res://Scripts/3d/player.gd" id="3_4kx6a"]
 [ext_resource type="AudioStream" uid="uid://mxbngaepiv3r" path="res://Assets/Audio/assets_audio_jump_sound.wav" id="3_e5wd5"]
-[ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="4_1fybv"]
 [ext_resource type="Script" uid="uid://bceqhwcb30310" path="res://Scripts/3d/spell_manager.gd" id="4_yy2vc"]
 [ext_resource type="AudioStream" uid="uid://25mbv8fy2msn" path="res://Assets/Audio/lvlupjam_lvl1_night.wav" id="5_hxy3m"]
 [ext_resource type="PackedScene" uid="uid://byc1w7qhd0q5w" path="res://Scences/3d/DroneEnemy.tscn" id="6_drone"]
@@ -13,11 +12,11 @@
 [ext_resource type="Script" uid="uid://bi2848487h4dl" path="res://Scripts/3d/drone_spawner.gd" id="7_spawner"]
 [ext_resource type="Texture2D" uid="uid://pburc1rstrdc" path="res://Assets/Textures/2k_earth_daymap.jpg" id="8_yy2vc"]
 [ext_resource type="Texture2D" uid="uid://didprewd1suif" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_AmbientOcclusion.png" id="9_0ijpo"]
-[ext_resource type="Texture2D" uid="uid://dfxchdai31i7n" path="res://Assets/Textures/2k_jupiter.jpg" id="9_jupiter"]
 [ext_resource type="Script" uid="uid://ylkcwueidsgf" path="res://Scripts/3d/planet.gd" id="10_5qjsa"]
 [ext_resource type="Texture2D" uid="uid://mb4x3wbs0bju" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Displacement.png" id="10_rem25"]
 [ext_resource type="Texture2D" uid="uid://dp366s5ay5ptt" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_NormalGL.png" id="11_avmwb"]
 [ext_resource type="Texture2D" uid="uid://cdvv8isbq8v0j" path="res://Assets/Textures/Ground037_1K-PNG/Ground037_1K-PNG_Roughness.png" id="12_ohq7n"]
+[ext_resource type="PackedScene" uid="uid://t67hw7bgruuh" path="res://Scences/ui.tscn" id="18_5qjsa"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_kdf6n"]
 panorama = ExtResource("1_e5wd5")
@@ -78,7 +77,8 @@ radial_segments = 96
 rings = 48
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nb71f"]
-albedo_texture = ExtResource("9_jupiter")
+albedo_color = Color(0.92156863, 0.40784314, 0.2, 1)
+albedo_texture = ExtResource("7_mpsoo")
 roughness_texture = ExtResource("12_ohq7n")
 roughness_texture_channel = 4
 normal_enabled = true
@@ -90,7 +90,7 @@ heightmap_enabled = true
 heightmap_scale = 1.0
 heightmap_texture = ExtResource("10_rem25")
 
-[sub_resource type="SphereMesh" id="SphereMesh_vpcyp"]
+[sub_resource type="SphereMesh" id="SphereMesh_ohq7n"]
 material = SubResource("StandardMaterial3D_nb71f")
 radius = 200.0
 height = 400.0
@@ -133,8 +133,6 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 script = ExtResource("4_yy2vc")
 spell_hand = NodePath("../Camera3D/SpellHand")
 camera = NodePath("../Camera3D")
-
-[node name="UI" parent="." unique_id=1263911513 instance=ExtResource("4_1fybv")]
 
 [node name="DroneSpawner" type="Node3D" parent="." unique_id=2042556996 node_paths=PackedStringArray("spawn_anchor_paths")]
 script = ExtResource("7_spawner")
@@ -182,7 +180,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 300, -500, -800)
 script = ExtResource("10_5qjsa")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Planet4" unique_id=1788987156]
-mesh = SubResource("SphereMesh_vpcyp")
+mesh = SubResource("SphereMesh_ohq7n")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Planet4" unique_id=2072161529]
 shape = SubResource("SphereShape3D_e5wd5")
+
+[node name="UI" parent="." unique_id=1263911513 instance=ExtResource("18_5qjsa")]
