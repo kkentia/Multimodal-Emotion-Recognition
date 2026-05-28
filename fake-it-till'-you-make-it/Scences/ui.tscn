@@ -94,18 +94,21 @@ expand_mode = 1
 
 [node name="Label" type="Label" parent="OpenedBook" unique_id=1598924289]
 layout_mode = 0
-offset_left = 45.0
-offset_top = 85.0
-offset_right = 457.0
-offset_bottom = 130.0
+offset_left = 87.0
+offset_top = 76.0
+offset_right = 438.0
+offset_bottom = 305.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.68235296)
 theme_override_fonts/font = ExtResource("6_varqg")
 text = "- Fireball:     say 'Ignite'  --> Face: Angry   | Voice: Angry
 - Confusion:    say 'Baffle'  --> Face: Happy   | Voice: Angry
 - Healing:      say 'Restore' --> Face: Happy   | Voice: Happy
 - Ice Shard:    say 'Freeze'  --> Face: Sad     | Voice: Fear
 - Lightning:    say 'Strike'  --> Face: Fear | Voice: Angry
-- Shadow Drain: say 'Drain'   --> Face: Sad     | Voice: Sad"
+- Shadow Drain: say 'Drain'   --> Face: Sad     | Voice: Sad
+
+Switch to STT Only mode and shout Ignite repetitevely"
 
 [node name="openTutorial" type="Button" parent="OpenedBook" unique_id=1902091896]
 layout_mode = 0
@@ -116,6 +119,7 @@ offset_bottom = 334.0
 text = "See Instructions"
 
 [node name="tutorial" type="ColorRect" parent="." unique_id=112637210]
+visible = false
 offset_left = -2.0
 offset_top = 2.0
 offset_right = 1293.0
@@ -150,11 +154,12 @@ offset_right = 455.0
 offset_bottom = 452.0
 theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
-text = "- Check the Spellbook by pressing E to check the spell requirements!
-- Press M to switch between casting modes (manual, Voice, Face)
+text = "- Check the Spellbook by pressing E.
+- Press M to switch between casting modes.
 - In Manual Mode, press F to cycle spells and left-click to cast.
-- Press Space while aiming at another planet to jump between planets.
--Save your home planet system from Drones!
+- Press Space while moving and aiming at another planet to jump between planets.
+
+Save your home planet system from Drones!
 "
 autowrap_mode = 1
 

@@ -4,19 +4,19 @@ const CONFIDENCE_THRESHOLD: float = 0.0
 const CAST_CHAIN_BONUS: int = 25
 
 enum FiringMode {
+	STT_ONLY,
 	FER_SER_STT,
 	FER_STT,
 	SER_STT,
-	STT_ONLY,
 	SER_ONLY,
 	MANUAL,
 }
 
 const FIRING_MODE_ORDER: Array[int] = [
+	FiringMode.STT_ONLY,
 	FiringMode.FER_SER_STT,
 	FiringMode.FER_STT,
 	FiringMode.SER_STT,
-	FiringMode.STT_ONLY,
 	FiringMode.SER_ONLY,
 	FiringMode.MANUAL,
 ]
@@ -31,7 +31,7 @@ var player_current_health: int = 100
 var score: int = 0
 var enemies_destroyed: int = 0
 var current_wave: int = 0
-var firing_mode: int = FiringMode.FER_SER_STT
+var firing_mode: int = FiringMode.STT_ONLY
 var last_fire_time: float = -10.0
 var cast_chain: int = 0
 
