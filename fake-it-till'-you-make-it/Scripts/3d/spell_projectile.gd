@@ -115,15 +115,23 @@ func _try_overlapping_targets() -> bool:
 func _try_damage_target(target: Node) -> bool:
 	if has_impacted or target == null or not is_instance_valid(target):
 		return false
+	if _is_planet_node(target):
+		return false
 	var damage_target: Node = target
 	if not damage_target.has_method("take_damage"):
 		damage_target = target.get_parent()
+	if _is_planet_node(damage_target):
+		return false
 	if damage_target != null and damage_target.has_method("take_damage"):
 		has_impacted = true
 		damage_target.take_damage(damage)
 		queue_free()
 		return true
 	return false
+
+
+func _is_planet_node(node: Node) -> bool:
+	return node != null and (node.is_in_group("planets") or node.is_in_group("Planets"))
 
 
 func _get_initial_ray_excludes() -> Array[RID]:

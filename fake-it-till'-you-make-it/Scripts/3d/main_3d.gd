@@ -278,9 +278,9 @@ func _on_enemy_destroyed(points: int, killed_by_player: bool) -> void:
 		if ui and ui.has_method("show_status_message"):
 			ui.show_status_message("+%d Enemy Banished" % points, Color(1.0, 0.8, 0.25, 1.0))
 	else:
-		score = max(score - 200, 0)
+		score = max(score - 100, 0)
 		if ui and ui.has_method("show_status_message"):
-			ui.show_status_message("-200 Planet Breached!", Color(1.0, 0.3, 0.25, 1.0))
+			ui.show_status_message("-100 Planet Breached!", Color(1.0, 0.3, 0.25, 1.0))
 	_refresh_metrics()
 
 func _on_enemy_attacked_player(damage: int) -> void:
