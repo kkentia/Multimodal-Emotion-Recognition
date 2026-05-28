@@ -19,10 +19,10 @@ thickness = 13
 bg_color = Color(0.2901961, 0.9254902, 0.3372549, 1)
 
 [node name="UI" type="CanvasLayer" unique_id=1263911513]
-process_mode = 3
 script = ExtResource("1_varqg")
 
 [node name="WebcamFeed" type="TextureRect" parent="." unique_id=917062065]
+visible = false
 layout_direction = 4
 offset_left = 12.0
 offset_top = 10.0
@@ -66,6 +66,7 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="SpellbookBtn" type="TextureButton" parent="." unique_id=280788790]
+visible = false
 offset_left = 1117.0
 offset_top = 544.0
 offset_right = 1275.0
@@ -79,6 +80,7 @@ ignore_texture_size = true
 stretch_mode = 0
 
 [node name="OpenedBook" type="TextureRect" parent="." unique_id=1104542033]
+visible = false
 offset_left = 383.0
 offset_top = 170.0
 offset_right = 903.0
@@ -110,6 +112,7 @@ offset_bottom = 334.0
 text = "See Instructions"
 
 [node name="tutorial" type="ColorRect" parent="." unique_id=112637210]
+visible = false
 offset_left = -2.0
 offset_top = 2.0
 offset_right = 1293.0
@@ -126,48 +129,34 @@ texture = ExtResource("5_2ydy1")
 
 [node name="Label" type="Label" parent="tutorial/TextureRect" unique_id=859427288]
 layout_mode = 0
-offset_left = 126.0
-offset_top = 129.0
+offset_left = 114.0
+offset_top = 151.0
 offset_right = 470.0
-offset_bottom = 678.0
+offset_bottom = 316.0
 theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
-text = "------------- Fake your emotions to cast spells! -------------
-- Check the Spellbook by pressing E to check the spell requirements!
-- Press M to switch between casting modes (manual, Voice, Face)
-- In Manual Mode, press F to cycle spells and left-click to cast.
-- Press Space while aiming at another planet to jump between planets.
--Save your home planet system from Drones!
+text = "- Fake your emotions to cast spells!
+
+- Press Space to Jump from a Planet to Another
+
+-Save your home planet system from Meteorites and Aliens!
+
 "
-autowrap_mode = 1
 
-[node name="Label2" type="Label" parent="tutorial/TextureRect" unique_id=1963965750]
+[node name="CloseBtn" type="Button" parent="tutorial/TextureRect" unique_id=770232922]
 layout_mode = 0
-offset_left = 155.0
-offset_top = 371.0
-offset_right = 499.0
-offset_bottom = 476.0
-theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
-theme_override_fonts/font = ExtResource("6_varqg")
-text = "FER ---> Face Emotions Recognition
-SER ---> Speech Emtions Recognition
-STT ---> Speech Text (the words you are saying)
-Manual ---> usual keyboard controls"
-autowrap_mode = 1
-
-[node name="CloseBtn2" type="Button" parent="tutorial/TextureRect" unique_id=459798583]
-layout_mode = 0
-offset_left = 209.0
-offset_top = 473.0
-offset_right = 376.0
-offset_bottom = 546.0
+offset_left = 422.0
+offset_top = 44.0
+offset_right = 484.0
+offset_bottom = 117.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
 theme_override_font_sizes/font_size = 50
-text = "GOT IT!"
+text = "X"
 flat = true
 
 [node name="Settings" type="Button" parent="." unique_id=1293735417]
+visible = false
 offset_left = 1200.0
 offset_top = 9.0
 offset_right = 1288.0
@@ -310,10 +299,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -51.0
-offset_top = -92.0
-offset_right = 57.0
-offset_bottom = -3.5
+offset_left = -54.0
+offset_top = -46.0
+offset_right = 54.0
+offset_bottom = 42.5
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("8_335ti")
@@ -371,7 +360,7 @@ vertical_alignment = 1
 
 [connection signal="pressed" from="SpellbookBtn" to="." method="_on_spellbook_btn_pressed"]
 [connection signal="pressed" from="OpenedBook/openTutorial" to="." method="_on_open_tutorial_pressed"]
-[connection signal="pressed" from="tutorial/TextureRect/CloseBtn2" to="." method="_on_close_btn_pressed"]
+[connection signal="pressed" from="tutorial/TextureRect/CloseBtn" to="." method="_on_close_btn_pressed"]
 [connection signal="pressed" from="Settings" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="Settings/settings/TextureRect/CloseBtn" to="." method="_on_close_btn_pressed"]
 [connection signal="pressed" from="Settings/settings/TextureRect/ExitGame" to="." method="_on_exit_game_pressed"]

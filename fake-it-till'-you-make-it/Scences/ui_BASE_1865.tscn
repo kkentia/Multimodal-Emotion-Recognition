@@ -19,15 +19,14 @@ thickness = 13
 bg_color = Color(0.2901961, 0.9254902, 0.3372549, 1)
 
 [node name="UI" type="CanvasLayer" unique_id=1263911513]
-process_mode = 3
 script = ExtResource("1_varqg")
 
 [node name="WebcamFeed" type="TextureRect" parent="." unique_id=917062065]
 layout_direction = 4
-offset_left = 12.0
-offset_top = 10.0
-offset_right = 301.0
-offset_bottom = 204.0
+offset_left = 990.0
+offset_top = 90.0
+offset_right = 1279.0
+offset_bottom = 284.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 texture = SubResource("CameraTexture_1dgwv")
@@ -35,20 +34,16 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="DataHUD" type="Panel" parent="." unique_id=2008427267]
-self_modulate = Color(0.7294118, 0.7294118, 0.7294118, 0)
-offset_left = 22.0
-offset_top = 231.0
-offset_right = 316.0
-offset_bottom = 475.0
+offset_left = 10.0
+offset_top = 225.0
+offset_right = 304.0
+offset_bottom = 469.0
 mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="DataHUD" unique_id=820276242]
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 0.136
-anchor_bottom = 0.316
-offset_right = 0.01599884
-offset_bottom = -37.104004
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
 
 [node name="NLP" type="Label" parent="DataHUD/VBoxContainer" unique_id=637659733]
 layout_mode = 2
@@ -57,12 +52,6 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="SER" type="Label" parent="DataHUD/VBoxContainer" unique_id=501853307]
-layout_mode = 2
-
-[node name="STT" type="Label" parent="DataHUD/VBoxContainer" unique_id=1712679765]
-layout_mode = 2
-
-[node name="AbilityHint" type="Label" parent="DataHUD/VBoxContainer" unique_id=1902889598]
 layout_mode = 2
 
 [node name="SpellbookBtn" type="TextureButton" parent="." unique_id=280788790]
@@ -126,45 +115,30 @@ texture = ExtResource("5_2ydy1")
 
 [node name="Label" type="Label" parent="tutorial/TextureRect" unique_id=859427288]
 layout_mode = 0
-offset_left = 126.0
-offset_top = 129.0
+offset_left = 114.0
+offset_top = 151.0
 offset_right = 470.0
-offset_bottom = 678.0
+offset_bottom = 316.0
 theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
-text = "------------- Fake your emotions to cast spells! -------------
-- Check the Spellbook by pressing E to check the spell requirements!
-- Press M to switch between casting modes (manual, Voice, Face)
-- In Manual Mode, press F to cycle spells and left-click to cast.
-- Press Space while aiming at another planet to jump between planets.
--Save your home planet system from Drones!
+text = "- Fake your emotions to cast spells!
+
+- Press Space to Jump from a Planet to Another
+
+-Save your home planet system from Meteorites and Aliens!
+
 "
-autowrap_mode = 1
 
-[node name="Label2" type="Label" parent="tutorial/TextureRect" unique_id=1963965750]
+[node name="CloseBtn" type="Button" parent="tutorial/TextureRect" unique_id=770232922]
 layout_mode = 0
-offset_left = 155.0
-offset_top = 371.0
-offset_right = 499.0
-offset_bottom = 476.0
-theme_override_colors/font_color = Color(0.20240778, 0.14444539, 0.025773078, 1)
-theme_override_fonts/font = ExtResource("6_varqg")
-text = "FER ---> Face Emotions Recognition
-SER ---> Speech Emtions Recognition
-STT ---> Speech Text (the words you are saying)
-Manual ---> usual keyboard controls"
-autowrap_mode = 1
-
-[node name="CloseBtn2" type="Button" parent="tutorial/TextureRect" unique_id=459798583]
-layout_mode = 0
-offset_left = 209.0
-offset_top = 473.0
-offset_right = 376.0
-offset_bottom = 546.0
+offset_left = 422.0
+offset_top = 44.0
+offset_right = 484.0
+offset_bottom = 117.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("6_varqg")
 theme_override_font_sizes/font_size = 50
-text = "GOT IT!"
+text = "X"
 flat = true
 
 [node name="Settings" type="Button" parent="." unique_id=1293735417]
@@ -233,7 +207,7 @@ offset_bottom = 21.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Sound"
 
-[node name="ModeLabel" type="Label" parent="Settings/settings/TextureRect" unique_id=461558265]
+[node name="ModeLabel" type="Label" parent="Settings/settings/TextureRect"]
 layout_mode = 0
 offset_left = 147.0
 offset_top = 250.0
@@ -245,7 +219,7 @@ theme_override_font_sizes/font_size = 24
 text = "Casting Mode"
 horizontal_alignment = 1
 
-[node name="ModeFER_SER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=580328628]
+[node name="ModeFER_SER_STT" type="Button" parent="Settings/settings/TextureRect"]
 layout_mode = 0
 offset_left = 124.0
 offset_top = 286.0
@@ -253,7 +227,7 @@ offset_right = 282.0
 offset_bottom = 322.0
 text = "FER+SER+STT"
 
-[node name="ModeFER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=902417903]
+[node name="ModeFER_STT" type="Button" parent="Settings/settings/TextureRect"]
 layout_mode = 0
 offset_left = 306.0
 offset_top = 286.0
@@ -261,7 +235,7 @@ offset_right = 464.0
 offset_bottom = 322.0
 text = "FER+STT"
 
-[node name="ModeSER_STT" type="Button" parent="Settings/settings/TextureRect" unique_id=361494340]
+[node name="ModeSER_STT" type="Button" parent="Settings/settings/TextureRect"]
 layout_mode = 0
 offset_left = 124.0
 offset_top = 332.0
@@ -269,7 +243,7 @@ offset_right = 282.0
 offset_bottom = 368.0
 text = "SER+STT"
 
-[node name="ModeSTT_ONLY" type="Button" parent="Settings/settings/TextureRect" unique_id=1429600948]
+[node name="ModeSTT_ONLY" type="Button" parent="Settings/settings/TextureRect"]
 layout_mode = 0
 offset_left = 306.0
 offset_top = 332.0
@@ -277,7 +251,7 @@ offset_right = 464.0
 offset_bottom = 368.0
 text = "STT Only"
 
-[node name="ModeSER_ONLY" type="Button" parent="Settings/settings/TextureRect" unique_id=1300014500]
+[node name="ModeSER_ONLY" type="Button" parent="Settings/settings/TextureRect"]
 layout_mode = 0
 offset_left = 124.0
 offset_top = 378.0
@@ -285,7 +259,7 @@ offset_right = 282.0
 offset_bottom = 414.0
 text = "SER Only"
 
-[node name="ModeMANUAL" type="Button" parent="Settings/settings/TextureRect" unique_id=1745354127]
+[node name="ModeMANUAL" type="Button" parent="Settings/settings/TextureRect"]
 layout_mode = 0
 offset_left = 306.0
 offset_top = 378.0
@@ -310,16 +284,17 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -51.0
-offset_top = -92.0
-offset_right = 57.0
-offset_bottom = -3.5
+offset_left = -54.0
+offset_top = -46.0
+offset_right = 54.0
+offset_bottom = 42.5
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("8_335ti")
 expand_mode = 1
 
 [node name="CastedLabel" type="Label" parent="." unique_id=1475186585]
+visible = false
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 514.0
@@ -330,48 +305,9 @@ grow_horizontal = 2
 theme_override_font_sizes/font_size = 64
 text = "CASTED!"
 
-[node name="TopLeftHUD" type="VBoxContainer" parent="." unique_id=1518449598]
-anchors_preset = -1
-anchor_left = 0.90200007
-anchor_top = 0.029000001
-anchor_right = 0.97300005
-anchor_bottom = 0.09900001
-offset_left = -0.5600586
-offset_top = 0.11999893
-offset_right = 0.5599365
-offset_bottom = -0.2800064
-
-[node name="ModeLabel" type="Label" parent="TopLeftHUD" unique_id=2242615]
-layout_mode = 2
-
-[node name="WaveLabel" type="Label" parent="TopLeftHUD" unique_id=1992588162]
-layout_mode = 2
-
-[node name="TopRightHUD" type="VBoxContainer" parent="." unique_id=1530580241]
-anchors_preset = -1
-anchor_left = 0.017
-anchor_top = 0.93100005
-anchor_right = 0.066
-anchor_bottom = 0.98600006
-offset_left = 0.23999786
-offset_top = -0.32006836
-offset_right = 0.5200043
-offset_bottom = 0.079956055
-
-[node name="ScoreLabel" type="Label" parent="TopRightHUD" unique_id=1029176189]
-layout_mode = 2
-
-[node name="Whisper" type="Label" parent="." unique_id=267857874]
-offset_left = 158.0
-offset_top = 688.0
-offset_right = 1179.0
-offset_bottom = 711.0
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [connection signal="pressed" from="SpellbookBtn" to="." method="_on_spellbook_btn_pressed"]
 [connection signal="pressed" from="OpenedBook/openTutorial" to="." method="_on_open_tutorial_pressed"]
-[connection signal="pressed" from="tutorial/TextureRect/CloseBtn2" to="." method="_on_close_btn_pressed"]
+[connection signal="pressed" from="tutorial/TextureRect/CloseBtn" to="." method="_on_close_btn_pressed"]
 [connection signal="pressed" from="Settings" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="Settings/settings/TextureRect/CloseBtn" to="." method="_on_close_btn_pressed"]
 [connection signal="pressed" from="Settings/settings/TextureRect/ExitGame" to="." method="_on_exit_game_pressed"]

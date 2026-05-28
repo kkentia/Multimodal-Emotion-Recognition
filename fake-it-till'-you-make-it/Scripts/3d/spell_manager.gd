@@ -68,7 +68,7 @@ var SPELLS: Dictionary = {
 
 var held_spell_node: Node3D = null
 var held_spell_name: String = ""
-
+const PROJECTILE_SPEED_MULTIPLIER: float = 4.0
 
 func get_spell_names() -> Array[String]:
 	var names: Array[String] = []
@@ -237,11 +237,13 @@ func _launch_current_spell(spell: Dictionary) -> bool:
 
 	if spell_instance.has_method("configure_projectile"):
 		var spell_color: Color = spell.get("color", Color.WHITE)
+		var projectile_speed: float = float(spell.get("speed", 20.0)) * PROJECTILE_SPEED_MULTIPLIER
 		spell_instance.configure_projectile(
 			spell_name,
 			display_name,
 			spell_color,
 			float(spell.get("speed", 20.0)),
+			projectile_speed,
 			int(spell.get("damage", 10)),
 			ray_dir
 		)
@@ -249,6 +251,7 @@ func _launch_current_spell(spell: Dictionary) -> bool:
 		spell_instance.velocity_dir = ray_dir
 		spell_instance.speed = float(spell.get("speed", 20.0))
 		spell_instance.damage = int(spell.get("damage", 10))
+		spell_instance.speed = float(spell.get("speed", 20.0)) * PROJECTILE_SPEED_MULTIPLIER
 		spell_instance.lifetime = 6.0
 
 	print("🚀 Launched ", display_name, " in direction ", ray_dir, " at speed ", spell.get("speed", 0.0))

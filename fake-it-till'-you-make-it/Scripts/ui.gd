@@ -83,16 +83,17 @@ func _process(_delta: float) -> void:
 				transcript_text
 			)
 			var parent_node: Node = get_parent()
-			if parent_node != null and is_instance_valid(parent_node) and parent_node.has_method("process_ai_payload"):
-				parent_node.process_ai_payload(payload_dict)
-			elif parent_node != null and is_instance_valid(parent_node) and parent_node.has_method("process_ai_input"):
-				parent_node.process_ai_input(
-					spoken_word,
-					str(payload_dict.get("face_emotion", "unknown")),
-					float(payload_dict.get("face_confidence", 0.0)),
-					str(payload_dict.get("speech_emotion", "unknown")),
-					float(payload_dict.get("speech_confidence", 0.0))
-				)
+			if not get_tree().paused:
+				if parent_node != null and is_instance_valid(parent_node) and parent_node.has_method("process_ai_payload"):
+					parent_node.process_ai_payload(payload_dict)
+				elif parent_node != null and is_instance_valid(parent_node) and parent_node.has_method("process_ai_input"):
+					parent_node.process_ai_input(
+						spoken_word,
+						str(payload_dict.get("face_emotion", "unknown")),
+						float(payload_dict.get("face_confidence", 0.0)),
+						str(payload_dict.get("speech_emotion", "unknown")),
+						float(payload_dict.get("speech_confidence", 0.0))
+					)
 
 	if Input.is_action_just_pressed("ui_cancel"):
 		if settings.visible:
@@ -206,6 +207,7 @@ func update_spellbook(entries: Array[Dictionary]) -> void:
 
 func update_mouse_and_crosshair() -> void:
 	var any_popup_open: bool = settings.visible or opened_book.visible or tutorial.visible
+	get_tree().paused = settings.visible or tutorial.visible
 	if any_popup_open:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		crosshair.visible = false
@@ -296,6 +298,7 @@ func _on_close_btn_pressed() -> void:
 
 
 func _on_exit_game_pressed() -> void:
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://Scences/StartScreen.tscn")
 
 
