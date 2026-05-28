@@ -35,6 +35,10 @@ enabled=PackedStringArray()
 
 import/blender/enabled=false
 
+[global_group]
+
+planets=""
+
 [input]
 
 move_forward={
