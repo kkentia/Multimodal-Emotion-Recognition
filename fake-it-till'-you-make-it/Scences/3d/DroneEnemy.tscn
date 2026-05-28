@@ -12,6 +12,8 @@ radius = 44.291
 [node name="DroneEnemy" type="CharacterBody3D" unique_id=1186999166]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 109.06801, 0)
 script = ExtResource("1_drone")
+move_speed = 1000.0
+planet_contact_damage = 10
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1845682090]
 shape = SubResource("1_collision")

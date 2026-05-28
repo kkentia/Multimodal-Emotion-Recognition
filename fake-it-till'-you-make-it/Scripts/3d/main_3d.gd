@@ -43,6 +43,7 @@ var last_spoken_word: String = ""
 var last_ready_ability: String = ""
 var manual_spell_names: Array[String] = []
 var manual_spell_index: int = 0
+var is_game_over: bool = false
 
 
 func _ready() -> void:
@@ -330,3 +331,105 @@ func _resolve_casting_state(fer_ok: bool, ser_ok: bool) -> Dictionary:
 
 func _spoken_word_matches(ability_name: String) -> bool:
 	return ability_name != "" and last_spoken_word != "" and last_spoken_word == spell_manager.get_expected_keyword(ability_name)
+
+
+func apply_planet_hit(amount: int, planet: Node) -> void:
+	player_current_health = max(player_current_health - amount, 0)
+	cast_chain = 0
+	_refresh_metrics()
+	
+	if ui and ui.has_method("show_status_message"):
+		ui.show_status_message("Planet Hit! -%d" % amount, Color(1.0, 0.3, 0.25, 1.0))
+	
+	print("🪐 ", planet.name, " was hit! Health now: ", player_current_health)
+	
+	if player_current_health <= 0:
+		_game_over()
+		
+
+func _game_over() -> void:
+	if is_game_over:
+		return
+	is_game_over = true
+	
+	print("💀 GAME OVER — all health depleted")
+	
+	# Stop drones
+	if drone_spawner and drone_spawner.has_method("stop_waves"):
+		drone_spawner.stop_waves()
+	
+	# Build and show the game over panel
+	_show_game_over_panel()
+	
+	# Pause AFTER building the panel
+	get_tree().paused = true
+
+
+func _show_game_over_panel() -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)   # ← show cursor so buttons are clickable
+
+	var overlay := CanvasLayer.new()
+	overlay.name = "GameOverOverlay"
+	overlay.layer = 100   # on top of everything
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS   # works while paused
+	add_child(overlay)
+	
+	# Dim background
+	var bg := ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.75)
+	bg.anchor_right = 1.0
+	bg.anchor_bottom = 1.0
+	overlay.add_child(bg)
+	
+	# Center container
+	var center := CenterContainer.new()
+	center.anchor_right = 1.0
+	center.anchor_bottom = 1.0
+	overlay.add_child(center)
+	
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 24)
+	center.add_child(vbox)
+	
+	# "GAME OVER" label
+	var title := Label.new()
+	title.text = "GAME OVER"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 72)
+	title.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25))
+	vbox.add_child(title)
+	
+	# Score label
+	var score_label := Label.new()
+	score_label.text = "Final Score: %d" % score
+	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score_label.add_theme_font_size_override("font_size", 32)
+	score_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
+	vbox.add_child(score_label)
+	
+	# Restart button
+	var restart_btn := Button.new()
+	restart_btn.text = "Restart"
+	restart_btn.custom_minimum_size = Vector2(220, 60)
+	restart_btn.add_theme_font_size_override("font_size", 28)
+	restart_btn.process_mode = Node.PROCESS_MODE_ALWAYS   # clickable while paused
+	restart_btn.pressed.connect(_on_restart_pressed)
+	vbox.add_child(restart_btn)
+	
+	# quit to main menu button
+	var quit_btn := Button.new()
+	quit_btn.text = "Main Menu"
+	quit_btn.custom_minimum_size = Vector2(220, 50)
+	quit_btn.add_theme_font_size_override("font_size", 24)
+	quit_btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	quit_btn.pressed.connect(_on_quit_to_menu_pressed)
+	vbox.add_child(quit_btn)
+
+
+func _on_restart_pressed() -> void:
+	get_tree().paused = false        # unpause before reloading
+	get_tree().reload_current_scene() # restart the level
+
+func _on_quit_to_menu_pressed() -> void:
+	get_tree().paused = false   #must unpause before changing screens
+	get_tree().change_scene_to_file("res://Scences/StartScreen.tscn")

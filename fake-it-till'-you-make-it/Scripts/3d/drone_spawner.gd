@@ -105,3 +105,12 @@ func _cleanup_alive() -> void:
 		if is_instance_valid(enemy):
 			remaining.append(enemy)
 	alive_enemies = remaining
+
+func stop_waves() -> void:
+	if wave_timer:
+		wave_timer.stop()
+	# Remove any alive drones
+	for enemy in alive_enemies:
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	alive_enemies.clear()
